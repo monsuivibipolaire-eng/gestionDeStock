@@ -31,7 +31,7 @@ const routes: Routes = [
 @NgModule({
   declarations: [
     AppComponent,
-    
+    EntryVoucherComponent,
     ExitVoucherComponent,
     PurchaseOrderComponent
   ],
@@ -39,9 +39,7 @@ const routes: Routes = [
       ReactiveFormsModule,      ProductsComponent,      ProductsComponent,      AngularFireModule.initializeApp(environment.firebaseConfig),
       AngularFirestoreModule,    BrowserModule,
     RouterModule.forRoot(routes),
-    EntryVoucherComponent,
-    ProductsComponent,
-    AuthComponent,    FormsModule,
+    FormsModule,
     ReactiveFormsModule
   ],
   providers:[

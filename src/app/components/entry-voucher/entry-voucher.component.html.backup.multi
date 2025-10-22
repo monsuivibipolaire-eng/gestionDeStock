@@ -1,0 +1,128 @@
+<div class="container mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold text-gray-800 mb-6">Bons d'Entrée (Entry Vouchers)</h1>
+
+  <!-- Erreur -->
+  <div *ngIf="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+    <strong>Erreur :</strong> {{ errorMessage }}
+    <button (click)="errorMessage = ''" class="float-right">&times;</button>
+  </div>
+
+  <!-- Barre recherche + Ajouter -->
+  <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+    <input
+      type="text"
+      [ngModel]="searchTerm"
+      (ngModelChange)="onSearchChange($event)"
+      placeholder="Rechercher par fournisseur ou produit..."
+      class="w-full md:w-1/2 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+    />
+    <button (click)="toggleForm()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg">
+      <span *ngIf="!showForm">+ Ajouter un Bon</span>
+      <span *ngIf="showForm">Fermer le Formulaire</span>
+    </button>
+  </div>
+
+  <!-- Formulaire Ajout/Modif -->
+  <div *ngIf="showForm" class="bg-white shadow-md rounded-lg p-6 mb-6">
+    <h2 class="text-2xl font-semibold mb-4">{{ isEditing ? 'Modifier le Bon' : 'Nouveau Bon d\'Entrée' }}</h2>
+    <form [formGroup]="voucherForm" (ngSubmit)="onSubmit()" class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-gray-700 font-medium mb-2">Date *</label>
+          <input formControlName="date" type="date" class="w-full px-4 py-2 border rounded-lg"
+                 [class.border-red-500]="voucherForm.get('date')?.invalid && voucherForm.get('date')?.touched" />
+        </div>
+        <div>
+          <label class="block text-gray-700 font-medium mb-2">Fournisseur *</label>
+          <input formControlName="supplier" type="text" class="w-full px-4 py-2 border rounded-lg"
+                 [class.border-red-500]="voucherForm.get('supplier')?.invalid && voucherForm.get('supplier')?.touched" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-gray-700 font-medium mb-2">Produit *</label>
+        <select formControlName="productId" class="w-full px-4 py-2 border rounded-lg"
+                [class.border-red-500]="voucherForm.get('productId')?.invalid && voucherForm.get('productId')?.touched">
+          <option value="">-- Sélectionnez un produit --</option>
+          <option *ngFor="let product of products$ | async" [value]="product.id">{{ product.name }}</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-gray-700 font-medium mb-2">Quantité *</label>
+          <input formControlName="quantity" type="number" class="w-full px-4 py-2 border rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-gray-700 font-medium mb-2">Prix Unitaire (€) *</label>
+          <input formControlName="unitPrice" type="number" step="0.01" class="w-full px-4 py-2 border rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-gray-700 font-medium mb-2">Statut</label>
+          <select formControlName="status" class="w-full px-4 py-2 border rounded-lg">
+            <option value="pending">En attente</option>
+            <option value="validated">Validé</option>
+            <option value="cancelled">Annulé</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="block text-gray-700 font-medium mb-2">Notes</label>
+        <textarea formControlName="notes" rows="2" class="w-full px-4 py-2 border rounded-lg"></textarea>
+      </div>
+      <div class="flex gap-4">
+        <button type="submit" [disabled]="isLoading || voucherForm.invalid"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg disabled:bg-gray-400">
+          <span *ngIf="isLoading">Enregistrement...</span>
+          <span *ngIf="!isLoading">{{ isEditing ? 'Mettre à jour' : 'Ajouter' }}</span>
+        </button>
+        <button type="button" (click)="resetForm()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg">Annuler</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading && !showForm" class="text-center py-8">
+    <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+  </div>
+
+  <!-- Liste bons -->
+  <div *ngIf="!isLoading" class="bg-white shadow-md rounded-lg overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fournisseur</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produit</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantité</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Prix Unit.</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total (€)</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200" *ngIf="filteredVouchers$ | async as vouchers">
+        <tr *ngFor="let voucher of vouchers" class="hover:bg-gray-50">
+          <td class="px-6 py-4 whitespace-nowrap text-sm">{{ formatDate(voucher.date) }}</td>
+          <td class="px-6 py-4 text-sm font-medium">{{ voucher.supplier }}</td>
+          <td class="px-6 py-4 text-sm">{{ voucher.productName }}</td>
+          <td class="px-6 py-4 text-sm">{{ voucher.quantity }}</td>
+          <td class="px-6 py-4 text-sm">{{ voucher.unitPrice | number:'1.2-2' }} €</td>
+          <td class="px-6 py-4 text-sm font-semibold">{{ voucher.total | number:'1.2-2' }} €</td>
+          <td class="px-6 py-4 text-sm">
+            <span [ngClass]="{
+              'bg-yellow-100 text-yellow-800': voucher.status === 'pending',
+              'bg-green-100 text-green-800': voucher.status === 'validated',
+              'bg-red-100 text-red-800': voucher.status === 'cancelled'
+            }" class="px-2 py-1 rounded">{{ voucher.status }}</span>
+          </td>
+          <td class="px-6 py-4 text-right text-sm">
+            <button (click)="editVoucher(voucher)" class="text-indigo-600 hover:text-indigo-900 mr-4">Modifier</button>
+            <button (click)="deleteVoucher(voucher.id!, voucher.supplier)" class="text-red-600 hover:text-red-900">Supprimer</button>
+          </td>
+        </tr>
+        <tr *ngIf="vouchers.length === 0">
+          <td colspan="8" class="px-6 py-8 text-center text-gray-500">Aucun bon d'entrée trouvé.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

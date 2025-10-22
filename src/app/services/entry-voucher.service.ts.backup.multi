@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Firestore, collection, addDoc, updateDoc, deleteDoc, doc, query, collectionData, Query, orderBy, Timestamp } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
-import { EntryVoucher, ProductLine } from '../models/entry-voucher';
+import { EntryVoucher } from '../models/entry-voucher';
 
 @Injectable({
   providedIn: 'root'
@@ -11,17 +11,16 @@ export class EntryVoucherService {
 
   getEntryVouchers(): Observable<EntryVoucher[]> {
     const vouchersRef = collection(this.firestore, 'entryVouchers');
-    const q: Query = query(vouchersRef, orderBy('date', 'desc'));
+    const q: Query = query(vouchersRef, orderBy('date', 'desc'));  // Tri par date décroissante
     return collectionData(q, { idField: 'id' }) as Observable<EntryVoucher[]>;
   }
 
-  addEntryVoucher(voucher: Omit<EntryVoucher, 'id' | 'createdAt' | 'totalAmount'>): Promise<void> {
+  addEntryVoucher(voucher: Omit<EntryVoucher, 'id' | 'createdAt'>): Promise<void> {
     const vouchersRef = collection(this.firestore, 'entryVouchers');
-    const totalAmount = this.calculateTotal(voucher.products);
     const voucherData = {
       ...voucher,
-      totalAmount,
-      createdAt: Timestamp.now()
+      createdAt: Timestamp.now(),  // Timestamp auto
+      total: voucher.quantity * voucher.unitPrice  // Calcul total
     };
     return addDoc(vouchersRef, voucherData).then(() => {});
   }
@@ -29,8 +28,8 @@ export class EntryVoucherService {
   updateEntryVoucher(id: string, voucher: Partial<EntryVoucher>): Promise<void> {
     const voucherRef = doc(this.firestore, 'entryVouchers', id);
     const updateData = { ...voucher };
-    if (voucher.products) {
-      updateData.totalAmount = this.calculateTotal(voucher.products);
+    if (voucher.quantity && voucher.unitPrice) {
+      updateData.total = voucher.quantity * voucher.unitPrice;  // Recalcul total si modif
     }
     return updateDoc(voucherRef, updateData);
   }
@@ -38,9 +37,5 @@ export class EntryVoucherService {
   deleteEntryVoucher(id: string): Promise<void> {
     const voucherRef = doc(this.firestore, 'entryVouchers', id);
     return deleteDoc(voucherRef);
-  }
-
-  private calculateTotal(products: ProductLine[]): number {
-    return products.reduce((sum, p) => sum + p.subtotal, 0);
   }
 }

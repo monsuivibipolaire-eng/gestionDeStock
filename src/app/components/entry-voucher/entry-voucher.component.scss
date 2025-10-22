@@ -1,1 +1,15 @@
-/* Tailwind ou SCSS */
+// Styles Entry Voucher (Tailwind custom)
+.container {
+  max-width: 1200px;
+}
+
+button {
+  transition: all 0.2s ease-in-out;
+}
+
+@media (max-width: 768px) {
+  table {
+    display: block;
+    overflow-x: auto;
+  }
+}

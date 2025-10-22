@@ -1,0 +1,8 @@
+Wed Oct 22 14:32:31 CET 2025: Implémentation multi-produits Entry Voucher (FormArray lignes)...
+Backups créés
+UPDATED: src/app/models/entry-voucher.ts (ProductLine[] + totalAmount)
+UPDATED: src/app/services/entry-voucher.service.ts (calculateTotal pour totalAmount)
+UPDATED: src/app/components/entry-voucher/entry-voucher.component.ts (FormArray products + add/remove/calculate)
+UPDATED: src/app/components/entry-voucher/entry-voucher.component.html (FormArray lignes + accordion + total)
+TS OK!
+BUILD OK!
