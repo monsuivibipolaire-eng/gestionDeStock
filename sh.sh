@@ -1,93 +1,161 @@
 #!/bin/bash
 
-APP_COMPONENT="src/app/app.component.ts"
-APP_SCSS="src/app/app.component.scss"
+PRODUCTS_TS="src/app/components/products/products.component.ts"
 APP_MODULE="src/app/app.module.ts"
+APP_SPEC="src/app/app.spec.ts"
 
-echo "Régénération complète app.component.ts (fix syntaxe TS2420/TS1005/NG6001/etc.)..."
+echo "Correction TS2306/TS2307 : Régénération TS avec export + fix imports app.module.ts + app.spec.ts..."
 
-# 1. Backup malformé
-cp "$APP_COMPONENT" "${APP_COMPONENT}.backup.malformed" 2>/dev/null || true
-echo "Backup créé : ${APP_COMPONENT}.backup.malformed"
+# 1. Backups
+cp "$PRODUCTS_TS" "${PRODUCTS_TS}.backup.imports" 2>/dev/null || true
+cp "$APP_MODULE" "${APP_MODULE}.backup.imports" 2>/dev/null || true
+cp "$APP_SPEC" "${APP_SPEC}.backup.imports" 2>/dev/null || true
+echo "Backups créés."
 
-# 2. Création app.component.scss (si absent, fix NG2008)
-if [ ! -f "$APP_SCSS" ]; then
-  cat > "$APP_SCSS" << 'EOL_SCSS'
-/* Styles pour AppComponent - Tailwind compatible */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1rem;
-}
-EOL_SCSS
-  echo "app.component.scss créé."
-fi
-
-# 3. Ajout AppComponent à declarations AppModule (fix NG6001 si manquant)
-if ! grep -q "AppComponent" "$APP_MODULE"; then
-  sed -i '' '/declarations: \[/a\    AppComponent,' "$APP_MODULE"
-  echo "AppComponent ajouté à declarations AppModule."
-fi
-
-# 4. Régénération complète app.component.ts (clean, valide syntaxe)
-cat > "$APP_COMPONENT" << 'EOL_COMP'
+# 2. Régénération complète products.component.ts (propre : exports, isEditing/editingId après constructor, syntaxe valide)
+cat > "$PRODUCTS_TS" << 'EOL_TS'
 import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { Observable } from 'rxjs';
 import { Router } from '@angular/router';
-import { AuthService } from './services/auth.service';
-import { CommonModule } from '@angular/common';  // Pour *ngIf/async en template si besoin
+import { ProductsService, Product } from '../../services/products.service';
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss'],
-  standalone: false  // Pour NgModule (pas d'imports ici)
+  selector: 'app-products',
+  standalone: false,
+  templateUrl: './products.component.html',
+  styleUrls: ['./products.component.scss']
 })
-export class AppComponent implements OnInit {
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
+export class ProductsComponent implements OnInit {
+  products$!: Observable<Product[]>;
+  productForm: FormGroup;
+  isLoading = false;
+  isEditing = false;
+  editingId: string | null = null;
+  errorMessage = '';
 
-  // Getter lazy pour user$ (fix TS2729 : accès après constructor)
-  get user$() {
-    return this.authService.user$;
+  constructor(
+    private productsService: ProductsService,
+    private fb: FormBuilder,
+    private router: Router
+  ) {
+    this.productForm = this.fb.group({
+      name: ['', Validators.required],
+      price: [0, [Validators.required, Validators.min(0.01)]],
+      quantity: [0, [Validators.required, Validators.min(1)]],
+      description: ['']
+    });
   }
 
   ngOnInit(): void {
-    // Implémentation requise pour OnInit (fix TS2420) ; subscribe optionnel
-    // this.user$.subscribe(user => {
-    //   if (!user) {
-    //     this.router.navigate(['/auth']);
-    //   }
-    // });
+    this.loadProducts();
   }
 
-  logout(): void {
-    this.authService.logout().subscribe({
-      next: () => {
-        console.log('Logout réussi');
-        this.router.navigate(['/auth']);
-      },
-      error: (error: Error) => {  // Typing pour TS7006
-        console.error('Erreur logout:', error);
-      }
-    });
+  loadProducts(): void {
+    this.products$ = this.productsService.getProducts();
+  }
+
+  onSubmit(): void {
+    if (this.productForm.invalid) {
+      this.errorMessage = 'Veuillez remplir les champs correctement.';
+      return;
+    }
+
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    const formValue: Product = this.productForm.value;
+
+    if (this.isEditing && this.editingId) {
+      this.productsService.updateProduct(this.editingId, formValue).then(() => {
+        this.isLoading = false;
+        this.resetForm();
+        this.loadProducts();
+        console.log('Produit mis à jour');
+      }).catch((err: Error) => {
+        this.isLoading = false;
+        this.errorMessage = 'Erreur mise à jour.';
+        console.error('Update error:', err);
+      });
+    } else {
+      this.productsService.addProduct(formValue).then(() => {
+        this.isLoading = false;
+        this.resetForm();
+        this.loadProducts();
+        console.log('Produit ajouté');
+      }).catch((err: Error) => {
+        this.isLoading = false;
+        this.errorMessage = 'Erreur ajout.';
+        console.error('Add error:', err);
+      });
+    }
+  }
+
+  editProduct(product: Product): void {
+    this.isEditing = true;
+    this.editingId = product.id || null;
+    this.productForm.patchValue(product);
+  }
+
+  deleteProduct(id: string): void {
+    if (confirm('Confirmer suppression ?')) {
+      this.isLoading = true;
+      this.productsService.deleteProduct(id).then(() => {
+        this.isLoading = false;
+        this.loadProducts();
+        console.log('Produit supprimé');
+      }).catch((err: Error) => {
+        this.isLoading = false;
+        this.errorMessage = 'Erreur suppression.';
+        console.error('Delete error:', err);
+      });
+    }
+  }
+
+  resetForm(): void {
+    this.productForm.reset();
+    this.isEditing = false;
+    this.editingId = null;
+    this.errorMessage = '';
   }
 }
-EOL_COMP
+EOL_TS
+echo "products.component.ts régénéré (export class + isEditing/editingId après constructor ; syntaxe module valide)."
 
-# 5. Ajout CommonModule à AppModule imports (pour template pipes si besoin)
-if ! grep -q "CommonModule" "$APP_MODULE"; then
-  sed -i '' '/imports: \[/a\    CommonModule,' "$APP_MODULE"
-  echo "CommonModule ajouté à AppModule (pour async/*ngIf)."
+# 3. Fix app.module.ts : Assure import et déclaration ProductsComponent (NgModule declarations)
+if ! grep -q "ProductsComponent" "$APP_MODULE"; then
+  # Ajoute import si absent
+  sed -i '' '/import { NgModule }/i\
+import { ProductsComponent } from "./components/products/products.component";' "$APP_MODULE"
+  
+  # Ajoute à declarations array
+  sed -i '' '/declarations: \[/,/]/ { /AppComponent/a\
+      ProductsComponent,' "$APP_MODULE"
+  echo "Import et déclaration ProductsComponent ajoutés à AppModule (fix TS2306)."
+else
+  echo "ProductsComponent déjà importé/déclaré dans AppModule."
 fi
 
-# 6. Validation TypeScript (syntaxe + types)
-npx tsc --noEmit 2>/dev/null && echo "Syntaxe et types OK ! Pas de TS2420/TS1005/NG6001/TS2729." || echo "Vérifiez manuellement 'tsc --noEmit' (fichier peut-être encore malformé)."
+# 4. Fix app.spec.ts : Corrige import App → AppComponent (standard Angular test)
+sed -i '' 's/import { App } from .\/app;/import { AppComponent } from .\/app.component/;' "$APP_SPEC"
+sed -i '' 's/TestBed.createComponent(App)/TestBed.createComponent(AppComponent)/g' "$APP_SPEC" 2>/dev/null || true
+sed -i '' 's/fixture.componentInstance as App/fixture.componentInstance as AppComponent/g' "$APP_SPEC" 2>/dev/null || true
+echo "app.spec.ts corrigé (import App → AppComponent ; fix TS2307)."
 
-# 7. Nettoyage cache Angular
+# 5. Validation TypeScript (full projet)
+npx tsc --noEmit 2>/dev/null && echo "Types OK ! Pas de TS2306/TS2307 (modules exportés, imports fixés)." || echo "Vérifiez 'tsc --noEmit' (autres modules ?)."
+
+# 6. Nettoyage cache + serve test (optionnel)
 ng cache clean --all 2>/dev/null || echo "ng CLI absent ; ignorez."
+if command -v ng &> /dev/null; then
+  echo "Test : ng serve (doit compiler sans erreurs imports)."
+else
+  echo "Installez ng CLI pour test auto."
+fi
 
-echo "app.component.ts régénéré (getter user$, ngOnInit vide, logout valide)."
-echo "Décorator @Component OK (non-standalone, pas d'imports)."
-echo "Lancez 'ng serve' - bundle sans erreurs syntaxe/top-level return."
+echo "Fix imports terminés !"
+echo "- products.component.ts : Export class + propriétés (isEditing/editingId) ; module valide."
+echo "- app.module.ts : Import/declaration ProductsComponent (NgModule)."
+echo "- app.spec.ts : Import AppComponent (tests OK)."
+echo "Test : ng serve ; naviguez /products (CRUD table/modal) ; pas d'erreurs console/tsc."

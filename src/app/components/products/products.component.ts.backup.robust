@@ -1,13 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+import { Observable } from "rxjs";import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Observable } from 'rxjs';
 import { Router } from '@angular/router';
-import { ProductsService, Product } from '../../services/products.service';
+import { ProductsService, Product } from '../../services/products.service';  // Ajustez path
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-products',
-  standalone: false,
+  standalone: false,  // NgModule
   templateUrl: './products.component.html',
   styleUrls: ['./products.component.scss']
 })
@@ -15,8 +15,6 @@ export class ProductsComponent implements OnInit {
   products$!: Observable<Product[]>;
   productForm: FormGroup;
   isLoading = false;
-  isEditing = false;
-  editingId: string | null = null;
   errorMessage = '';
 
   constructor(
@@ -42,7 +40,7 @@ export class ProductsComponent implements OnInit {
 
   onSubmit(): void {
     if (this.productForm.invalid) {
-      this.errorMessage = 'Veuillez remplir les champs correctement.';
+      this.errorMessage = 'Veuillez remplir les champs correctement.';  // {{ 'form.invalid' | translate }}
       return;
     }
 
@@ -52,17 +50,19 @@ export class ProductsComponent implements OnInit {
     const formValue: Product = this.productForm.value;
 
     if (this.isEditing && this.editingId) {
+      // Update
       this.productsService.updateProduct(this.editingId, formValue).then(() => {
         this.isLoading = false;
         this.resetForm();
-        this.loadProducts();
+        this.loadProducts();  // Refresh list
         console.log('Produit mis à jour');
       }).catch((err: Error) => {
         this.isLoading = false;
-        this.errorMessage = 'Erreur mise à jour.';
+        this.errorMessage = 'Erreur mise à jour.';  // {{ 'error.update' | translate }}
         console.error('Update error:', err);
       });
     } else {
+      // Add
       this.productsService.addProduct(formValue).then(() => {
         this.isLoading = false;
         this.resetForm();
@@ -70,20 +70,21 @@ export class ProductsComponent implements OnInit {
         console.log('Produit ajouté');
       }).catch((err: Error) => {
         this.isLoading = false;
-        this.errorMessage = 'Erreur ajout.';
+        this.errorMessage = 'Erreur ajout.';  // {{ 'error.add' | translate }}
         console.error('Add error:', err);
       });
     }
   }
 
   editProduct(product: Product): void {
-    this.isEditing = true;
-    this.editingId = product.id || null;
+    this.isEditing = true;;
+    this.editingId = product.id || null;;
     this.productForm.patchValue(product);
+    // Ouvrez modal (via template)
   }
 
   deleteProduct(id: string): void {
-    if (confirm('Confirmer suppression ?')) {
+    if (confirm('Confirmer suppression ?')) {  // {{ 'confirm.delete' | translate }}
       this.isLoading = true;
       this.productsService.deleteProduct(id).then(() => {
         this.isLoading = false;
@@ -91,7 +92,7 @@ export class ProductsComponent implements OnInit {
         console.log('Produit supprimé');
       }).catch((err: Error) => {
         this.isLoading = false;
-        this.errorMessage = 'Erreur suppression.';
+        this.errorMessage = 'Erreur suppression.';  // {{ 'error.delete' | translate }}
         console.error('Delete error:', err);
       });
     }
@@ -99,7 +100,6 @@ export class ProductsComponent implements OnInit {
 
   resetForm(): void {
     this.productForm.reset();
-    this.isEditing = false;
     this.editingId = null;
     this.errorMessage = '';
   }
