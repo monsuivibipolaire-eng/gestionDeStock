@@ -32,7 +32,7 @@ const routes: Routes = [
   declarations: [
     AppComponent,
     
-    
+    ExitVoucherComponent,
     PurchaseOrderComponent
   ],
   imports: [
@@ -40,7 +40,7 @@ const routes: Routes = [
       AngularFirestoreModule,    BrowserModule,
     RouterModule.forRoot(routes),
     EntryVoucherComponent,
-    ExitVoucherComponent,    ProductsComponent,
+    ProductsComponent,
     AuthComponent,    FormsModule,
     ReactiveFormsModule
   ],

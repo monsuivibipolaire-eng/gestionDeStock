@@ -1,0 +1,7 @@
+Wed Oct 22 14:35:23 CET 2025: Implémentation Exit Voucher (Bon Sortie) - CRUD multi-produits...
+GENERATED: src/app/models/exit-voucher.ts (ExitVoucher avec type sale/transfer/loss)
+GENERATED: src/app/services/exit-voucher.service.ts (CRUD Firestore avec calculateTotal)
+GENERATED: src/app/components/exit-voucher/exit-voucher.component.ts (FormArray products + type sale/transfer/loss)
+GENERATED: src/app/components/exit-voucher/exit-voucher.component.html (Form multi-lignes + accordion + badges type)
+GENERATED: src/app/components/exit-voucher/exit-voucher.component.scss
+TS OK!
