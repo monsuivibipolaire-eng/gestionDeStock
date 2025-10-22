@@ -50,8 +50,16 @@
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.15",
     "typescript": "~5.9.2"
-  },
-  "overrides": {
-    "rxjs": "$rxjs"
   }
 }
+,
+  "overrides": {
+    "rxjs": "~7.8.1"
+  },
+  "resolutions": {
+    "rxjs": "~7.8.1"
+  }
+  ,
+  "overrides": {
+    "rxjs": "~7.8.1"
+  }

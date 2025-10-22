@@ -4,8 +4,9 @@ import { AuthService } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
+  standalone: false,
   templateUrl: './app.component.html',
-  styleUrls: [] // Ou ['./app.component.scss'] si vous en créez un
+  styleUrls: []
 })
 export class AppComponent {
   title = 'gestion-stock-app';

@@ -3,6 +3,6 @@ import { Injectable } from '@angular/core';
 @Injectable({
   providedIn: 'root'
 })
-export class ExitVoucher {
-  
+export class uentryvoucherService {
+  // Implémentez CRUD pour bons
 }
