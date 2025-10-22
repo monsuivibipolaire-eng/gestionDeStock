@@ -34,11 +34,11 @@
         </div>
         <div>
           <label class="block text-gray-700 font-medium mb-2">Date *</label>
-          <input formControlName="date" type="date" />
+          <input formControlName="date" type="date" class="w-full px-4 py-2 border rounded-lg" />
         </div>
         <div>
           <label class="block text-gray-700 font-medium mb-2">Valable Jusqu'au *</label>
-          <input formControlName="validUntil" type="date" />
+          <input formControlName="validUntil" type="date" class="w-full px-4 py-2 border rounded-lg" />
         </div>
         <div>
           <label class="block text-gray-700 font-medium mb-2">Statut</label>
@@ -54,11 +54,11 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block text-gray-700 font-medium mb-2">Client *</label>
-          <ng-select formControlName="customer" [items]="(customers$ | async) ?? []" bindLabel="name" bindValue="name" placeholder="-- Sélectionnez un client --" [searchable]="true" [clearable]="true" class="w-full"></ng-select>
+          <input formControlName="customer" type="text" class="w-full px-4 py-2 border rounded-lg" />
         </div>
         <div>
           <label class="block text-gray-700 font-medium mb-2">Email Client</label>
-          <input formControlName="customerEmail" type="email" />
+          <input formControlName="customerEmail" type="email" class="w-full px-4 py-2 border rounded-lg" />
         </div>
       </div>
 

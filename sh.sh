@@ -1,275 +1,235 @@
 #!/bin/bash
 
-# Script pour ajouter boutons Imprimer + méthode print() dans Products, Entry, Exit, Purchase Order
-# Usage: ./add-print-all-pages.sh
-# Logs: print-all-pages.log ; Backups: *.backup.printall
-# Output: Boutons imprimer + window.print() + Print CSS
+# Script pour ajouter bouton Imprimer à côté de Modifier/Supprimer dans TOUTES les pages
+# Implémente printItem(item) qui génère HTML formaté et imprime
+# Usage: ./add-print-button-all-items.sh
+# Logs: print-all-items.log ; Backups: *.backup.printitems
 
-LOG_FILE="print-all-pages.log"
+LOG_FILE="print-all-items.log"
 GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
 NC='\033[0m'
 
 log_info() {
     echo -e "${GREEN}[INFO]${NC} $1" | tee -a "$LOG_FILE"
 }
 
-log_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1" | tee -a "$LOG_FILE"
-}
-
 > "$LOG_FILE"
-log_info "$(date): Ajout boutons Imprimer dans toutes pages..."
+log_info "$(date): Ajout bouton Imprimer pour chaque item (toutes pages)..."
 
 # Fichiers cibles
 declare -A COMPONENTS=(
     ["products"]="src/app/components/products"
+    ["suppliers"]="src/app/components/suppliers"
+    ["customers"]="src/app/components/customers"
     ["entry-voucher"]="src/app/components/entry-voucher"
     ["exit-voucher"]="src/app/components/exit-voucher"
     ["purchase-order"]="src/app/components/purchase-order"
+    ["devis"]="src/app/components/devis"
 )
 
-GLOBAL_STYLES="src/styles.scss"
-
-# 1. Backups
+# Backups
 for comp in "${!COMPONENTS[@]}"; do
     dir="${COMPONENTS[$comp]}"
     for ext in "ts" "html"; do
         file="$dir/$comp.component.$ext"
-        [ -f "$file" ] && cp "$file" "${file}.backup.printall"
+        [ -f "$file" ] && cp "$file" "${file}.backup.printitems"
     done
 done
-[ -f "$GLOBAL_STYLES" ] && cp "$GLOBAL_STYLES" "${GLOBAL_STYLES}.backup.printall"
 log_info "Backups créés"
 
-# 2. Bouton HTML Imprimer (SVG printer icon + Tailwind)
-PRINT_BUTTON='    <button (click)="print()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg flex items-center space-x-2 transition duration-200 no-print">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-      </svg>
-      <span>Imprimer</span>
-    </button>'
+# ===================================
+# 1. MÉTHODE TS : printItem(item) universelle
+# ===================================
+log_info "Ajout méthode printItem(item) dans tous components..."
 
-# 3. Méthode print() TypeScript
-PRINT_METHOD='
-  print(): void {
-    window.print();
-  }'
+# Méthode printItem universelle (génère HTML formaté selon type item)
+PRINT_ITEM_METHOD='
+  printItem(item: any): void {
+    // Génère HTML formaté pour impression
+    const printWindow = window.open("", "_blank", "width=800,height=600");
+    if (!printWindow) return;
 
-# 4. Fonction pour ajouter bouton dans HTML
-add_print_button_html() {
-    local html_file=$1
-    local component_name=$2
+    const itemType = this.getItemType();
+    const html = this.generatePrintHTML(item, itemType);
     
-    if [ ! -f "$html_file" ]; then
-        log_warn "Fichier non trouvé : $html_file"
-        return
-    fi
-    
-    # Vérifie si bouton déjà présent
-    if grep -q '(click)="print()"' "$html_file"; then
-        log_info "⏭️  Bouton Imprimer déjà présent dans $component_name.html"
-        return
-    fi
-    
-    # Cherche div avec flex contenant bouton "Ajouter" ou "Nouvelle"
-    if grep -q 'flex.*gap-4\|flex.*gap-2' "$html_file" && grep -q 'Ajouter\|Nouveau' "$html_file"; then
-        # Insère bouton Imprimer AVANT le bouton Ajouter/Nouveau (dans même div flex)
-        awk -v btn="$PRINT_BUTTON" '
-        /<div class="flex.*gap/ { in_flex=1 }
-        in_flex && /<button.*Ajouter|Nouveau/ && !done {
-            print btn
-            done=1
-        }
-        { print }
-        ' "$html_file" > "${html_file}.tmp"
-        mv "${html_file}.tmp" "$html_file"
-        log_info "✅ Bouton Imprimer ajouté dans $component_name.html"
-    else
-        log_warn "⚠️  Pattern flex/Ajouter non trouvé dans $component_name.html (ajout manuel requis)"
-    fi
-}
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 250);
+  }
 
-# 5. Fonction pour ajouter méthode print() dans TS
-add_print_method_ts() {
-    local ts_file=$1
-    local component_name=$2
-    
-    if [ ! -f "$ts_file" ]; then
-        log_warn "Fichier non trouvé : $ts_file"
-        return
-    fi
-    
-    # Vérifie si méthode déjà présente
-    if grep -q 'print():' "$ts_file"; then
-        log_info "⏭️  Méthode print() déjà présente dans $component_name.ts"
-        return
-    fi
-    
-    # Ajoute méthode avant dernière accolade fermante de la classe
-    awk -v method="$PRINT_METHOD" '
-    /^}$/ && !done && prev_line !~ /^}/ {
-        print method
-        done=1
+  getItemType(): string {
+    // Détecte type item selon component
+    if (this.constructor.name.includes("Product")) return "Produit";
+    if (this.constructor.name.includes("Supplier")) return "Fournisseur";
+    if (this.constructor.name.includes("Customer")) return "Client";
+    if (this.constructor.name.includes("Entry")) return "Bon d'\''Entrée";
+    if (this.constructor.name.includes("Exit")) return "Bon de Sortie";
+    if (this.constructor.name.includes("Purchase")) return "Bon de Commande";
+    if (this.constructor.name.includes("Devis")) return "Devis";
+    return "Document";
+  }
+
+  generatePrintHTML(item: any, itemType: string): string {
+    const today = new Date().toLocaleDateString("fr-FR");
+    let content = "";
+
+    // Content selon type
+    if (itemType === "Produit") {
+      content = `
+        <h2>Fiche Produit</h2>
+        <table>
+          <tr><th>Nom</th><td>${item.name || "N/A"}</td></tr>
+          <tr><th>Prix</th><td>${item.price || 0} DT</td></tr>
+          <tr><th>Quantité Stock</th><td>${item.quantity || 0}</td></tr>
+          <tr><th>Description</th><td>${item.description || "N/A"}</td></tr>
+        </table>
+      `;
+    } else if (itemType === "Fournisseur" || itemType === "Client") {
+      content = `
+        <h2>Fiche ${itemType}</h2>
+        <table>
+          <tr><th>Nom</th><td>${item.name || "N/A"}</td></tr>
+          <tr><th>Email</th><td>${item.email || "N/A"}</td></tr>
+          <tr><th>Téléphone</th><td>${item.phone || "N/A"}</td></tr>
+          <tr><th>Adresse</th><td>${item.address || "N/A"}</td></tr>
+          <tr><th>Notes</th><td>${item.notes || "N/A"}</td></tr>
+        </table>
+      `;
+    } else {
+      // Vouchers (Entry/Exit/Purchase/Devis)
+      const number = item.voucherNumber || item.orderNumber || item.quoteNumber || "N/A";
+      const date = item.date?.toDate ? item.date.toDate().toLocaleDateString("fr-FR") : "N/A";
+      const partner = item.supplier || item.customer || "N/A";
+      
+      content = `
+        <h2>${itemType} N° ${number}</h2>
+        <table>
+          <tr><th>Date</th><td>${date}</td></tr>
+          <tr><th>${itemType.includes("Entrée") || itemType.includes("Commande") ? "Fournisseur" : "Client"}</th><td>${partner}</td></tr>
+        </table>
+        
+        <h3>Produits</h3>
+        <table class="products-table">
+          <thead>
+            <tr>
+              <th>Produit</th>
+              <th>Quantité</th>
+              <th>Prix Unit.</th>
+              <th>Sous-total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(item.products || []).map((p: any) => `
+              <tr>
+                <td>${p.productName || "N/A"}</td>
+                <td>${p.quantity || 0}</td>
+                <td>${p.unitPrice || 0} DT</td>
+                <td>${p.subtotal || 0} DT</td>
+              </tr>
+            `).join("")}
+          </tbody>
+          <tfoot>
+            <tr>
+              <th colspan="3">Total</th>
+              <th>${item.totalAmount || item.subtotal || 0} DT</th>
+            </tr>
+          </tfoot>
+        </table>
+      `;
     }
-    { prev_line=$0; print }
-    ' "$ts_file" > "${ts_file}.tmp"
-    mv "${ts_file}.tmp" "$ts_file"
-    log_info "✅ Méthode print() ajoutée dans $component_name.ts"
-}
 
-# 6. Traitement de chaque component
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Impression ${itemType}</title>
+        <style>
+          @page { margin: 20mm; }
+          body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+          h1 { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; }
+          h2 { color: #2563eb; margin-top: 20px; }
+          h3 { margin-top: 15px; color: #333; }
+          table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+          th, td { padding: 8px; text-align: left; border: 1px solid #ddd; }
+          th { background: #f3f4f6; font-weight: bold; }
+          .products-table { margin-top: 10px; }
+          .products-table thead { background: #2563eb; color: white; }
+          .products-table tfoot { background: #f3f4f6; font-weight: bold; }
+          .header { text-align: center; margin-bottom: 20px; }
+          .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Gestion de Stock</h1>
+          <p>Date d'\''impression : ${today}</p>
+        </div>
+        ${content}
+        <div class="footer">
+          <p>Document généré automatiquement - Gestion Stock App</p>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+'
+
+# Ajoute méthodes dans chaque component TS
 for comp in "${!COMPONENTS[@]}"; do
-    dir="${COMPONENTS[$comp]}"
-    ts_file="$dir/$comp.component.ts"
-    html_file="$dir/$comp.component.html"
+    ts_file="${COMPONENTS[$comp]}/$comp.component.ts"
     
-    log_info "Traitement : $comp..."
-    add_print_method_ts "$ts_file" "$comp"
-    add_print_button_html "$html_file" "$comp"
+    if [ -f "$ts_file" ]; then
+        # Vérifie si printItem déjà présent
+        if ! grep -q "printItem(item:" "$ts_file"; then
+            # Ajoute avant dernière accolade
+            awk -v method="$PRINT_ITEM_METHOD" '
+            /^}$/ && !added {
+                print method
+                added=1
+            }
+            { print }
+            ' "$ts_file" > "${ts_file}.tmp" && mv "${ts_file}.tmp" "$ts_file"
+            
+            log_info "✅ Ajouté printItem() dans $comp.component.ts"
+        else
+            log_info "⏭️  printItem() déjà présent dans $comp.component.ts"
+        fi
+    fi
 done
 
-# 7. Print CSS global (si pas déjà présent)
-if ! grep -q '@media print' "$GLOBAL_STYLES"; then
-    log_info "Ajout Print CSS dans styles.scss..."
-    cat >> "$GLOBAL_STYLES" << 'EOF'
+# ===================================
+# 2. HTML : Ajoute bouton Imprimer après Modifier/Supprimer
+# ===================================
+log_info "Ajout bouton Imprimer dans HTML..."
 
-/* ============================================
-   Print Styles - Optimisation Impression
-   ============================================ */
-@media print {
-  /* Masque éléments non imprimables */
-  .no-print,
-  aside,
-  nav,
-  header,
-  button:not(.print-only),
-  .bg-gray-100,
-  input[type="text"],
-  input[type="number"],
-  input[type="date"],
-  input[type="email"],
-  select,
-  textarea,
-  .hover\:bg-blue-700,
-  .hover\:bg-green-700,
-  .hover\:bg-red-600,
-  .hover\:bg-purple-700 {
-    display: none !important;
-  }
+for comp in "${!COMPONENTS[@]}"; do
+    html_file="${COMPONENTS[$comp]}/$comp.component.html"
+    
+    if [ -f "$html_file" ]; then
+        # Cherche pattern : <button (click)="delete..."...>Supprimer</button>
+        # Ajoute après : <button (click)="printItem(item)" ...>Imprimer</button>
+        
+        awk '
+        /<button.*\(click\)="delete[A-Z][a-z]*\(/ {
+            print
+            print "          <button (click)=\"printItem(item)\" class=\"text-purple-600 hover:text-purple-900 no-print\">Imprimer</button>"
+            next
+        }
+        { print }
+        ' "$html_file" > "${html_file}.tmp" && mv "${html_file}.tmp" "$html_file"
+        
+        log_info "✅ Ajouté bouton Imprimer dans $comp.component.html"
+    fi
+done
 
-  /* Layout impression A4 */
-  body, html {
-    width: 210mm;
-    height: 297mm;
-    margin: 0;
-    padding: 0;
-    font-size: 11pt;
-    color: #000;
-    background: #fff;
-  }
-
-  main {
-    padding: 10mm !important;
-    background: #fff !important;
-  }
-
-  .container {
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  /* Header impression automatique */
-  @page {
-    margin: 15mm;
-    @bottom-right {
-      content: "Page " counter(page);
-      font-size: 9pt;
-    }
-  }
-
-  h1:first-of-type {
-    border-bottom: 2px solid #000;
-    padding-bottom: 5mm;
-    margin-bottom: 10mm;
-  }
-
-  /* Tables optimisées */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    page-break-inside: auto;
-  }
-
-  thead {
-    display: table-header-group;
-    font-weight: bold;
-  }
-
-  tr {
-    page-break-inside: avoid;
-    page-break-after: auto;
-  }
-
-  th, td {
-    border: 1px solid #333;
-    padding: 4pt 6pt;
-    text-align: left;
-  }
-
-  /* Badges status impression noir/blanc */
-  .bg-yellow-100, .bg-green-100, .bg-red-100, .bg-blue-100, 
-  .bg-purple-100, .bg-orange-100, .bg-gray-100 {
-    background: #fff !important;
-    color: #000 !important;
-    border: 1px solid #000 !important;
-    padding: 2pt 4pt !important;
-  }
-
-  /* Supprimer ombres/gradients */
-  .shadow, .shadow-md, .shadow-lg, .shadow-2xl {
-    box-shadow: none !important;
-  }
-
-  .bg-gradient-to-b {
-    background: #fff !important;
-  }
-
-  /* Force expansion accordions pour impression */
-  [hidden] {
-    display: block !important;
-  }
-
-  /* Spacing sections */
-  h2, h3 {
-    page-break-after: avoid;
-    margin-top: 8mm;
-  }
-
-  /* Force noir pour lisibilité */
-  * {
-    color: #000 !important;
-  }
-
-  /* Alternance lignes tableaux */
-  table tbody tr:nth-child(even) {
-    background: #f5f5f5 !important;
-  }
-
-  /* Optimisation texte */
-  p, li, td {
-    orphans: 3;
-    widows: 3;
-  }
-}
-EOF
-    log_info "✅ Print CSS ajouté dans styles.scss"
-else
-    log_info "⏭️  Print CSS déjà présent dans styles.scss"
-fi
-
-# 8. Validation
+# ===================================
+# 3. VALIDATION
+# ===================================
 if command -v ng &> /dev/null; then
     log_info "Validation compilation..."
     ng cache clean
@@ -277,35 +237,37 @@ if command -v ng &> /dev/null; then
     if [ $? -eq 0 ]; then
         log_info "✅ TS OK!"
     else
-        log_warn "⚠️  Erreurs TS détectées (vérifiez logs)"
+        log_info "⚠️  Erreurs TS (vérifiez logs)"
     fi
 fi
 
 echo ""
 echo "=========================================="
-echo "  ✅ Boutons Imprimer Ajoutés"
+echo "  ✅ Bouton Imprimer Ajouté Partout"
 echo "=========================================="
 echo "Pages modifiées :"
-echo "  - Products (/products)"
-echo "  - Entry Voucher (/entry-voucher)"
-echo "  - Exit Voucher (/exit-voucher)"
-echo "  - Purchase Order (/purchase-order)"
+echo "  - Products (tables produits)"
+echo "  - Suppliers (tables fournisseurs)"
+echo "  - Customers (tables clients)"
+echo "  - Entry Voucher (accordions bons entrée)"
+echo "  - Exit Voucher (accordions bons sortie)"
+echo "  - Purchase Order (accordions commandes)"
+echo "  - Devis (accordions devis)"
 echo ""
-echo "Features :"
-echo "  - Bouton 'Imprimer' (purple, icon printer)"
-echo "  - Méthode print() : window.print()"
-echo "  - Print CSS : masque sidebar/navbar/buttons"
-echo "  - Format A4 optimisé (210x297mm)"
-echo "  - Tables bordered, headers répétés"
-echo "  - Badges status noir/blanc"
+echo "Bouton ajouté :"
+echo "  'Imprimer' (violet) à côté de Modifier/Supprimer"
+echo ""
+echo "Fonctionnement :"
+echo "  - Click Imprimer → Ouvre nouvelle fenêtre avec HTML formaté"
+echo "  - Content auto-détecté (Produit/Fournisseur/Client/Bon)"
+echo "  - Format : Header entreprise + Table données + Footer"
+echo "  - Print automatique après génération HTML"
 echo ""
 echo "Test :"
 echo "  1. ng serve"
-echo "  2. Ouvrez page (ex: /products)"
-echo "  3. Click bouton 'Imprimer'"
-echo "  4. Dialog impression navigateur s'ouvre"
-echo "  5. Aperçu montre contenu sans menu/buttons"
-echo "  6. Imprimez PDF ou physiquement"
+echo "  2. /products → Table → Click 'Imprimer' sur produit → Fiche produit imprimée"
+echo "  3. /suppliers → Table → Click 'Imprimer' → Fiche fournisseur"
+echo "  4. /entry-voucher → Expand bon → Click 'Imprimer' → Bon formaté"
 echo ""
 echo "Logs : $LOG_FILE"
-echo "Revert : cp *.backup.printall *"
+echo "Revert : cp *.backup.printitems *"

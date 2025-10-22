@@ -5,24 +5,24 @@ import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { NgSelectModule } from '@ng-select/ng-select';import { Timestamp } from '@angular/fire/firestore';
-import { ExitVoucher, ProductLine } from "../../models/exit-voucher";
-import { ExitVoucherService } from '../../services/exit-voucher.service';
+import { Timestamp } from '@angular/fire/firestore';
+import { Devis, ProductLine } from "../../models/devis";
+import { DevisService } from '../../services/devis.service';
 import { ProductsService } from '../../services/products.service';
-import { CustomersService } from '../../services/customers.service';
-import { Customer } from '../../models/customer';import { Product } from '../../models/product';
+import { Product } from '../../models/product';
 
 @Component({
-  selector: 'app-exit-voucher',
-  templateUrl: './exit-voucher.component.html',
-  styleUrls: ['./exit-voucher.component.scss'],
-  imports: [ReactiveFormsModule, NgSelectModule, CommonModule, FormsModule],
+  selector: 'app-devis',
+  templateUrl: './devis.component.html',
+  styleUrls: ['./devis.component.scss'],
+  imports: [ReactiveFormsModule, CommonModule, FormsModule],
+  standalone: true
 })
-export class ExitVoucherComponent implements OnInit {
-  vouchers$!: Observable<ExitVoucher[]>;
-  filteredVouchers$!: Observable<ExitVoucher[]>;
+export class DevisComponent implements OnInit {
+  devis$!: Observable<Devis[]>;
+  filteredDevis$!: Observable<Devis[]>;
   products$!: Observable<Product[]>;
-  customers$!: Observable<Customer[]>;  voucherForm: FormGroup;
+  devisForm: FormGroup;
   isLoading = false;
   isEditing = false;
   editingId: string | null = null;
@@ -30,40 +30,43 @@ export class ExitVoucherComponent implements OnInit {
   searchTerm = '';
   searchTerm$ = new BehaviorSubject<string>('');
   showForm = false;
-  expandedVoucherId: string | null = null;
+  expandedDevisId: string | null = null;
 
   constructor(
-    private voucherService: ExitVoucherService,
+    private devisService: DevisService,
     private productsService: ProductsService,
-    private customersService: CustomersService,    private fb: FormBuilder,
+    private fb: FormBuilder,
     private router: Router
   ) {
-    this.voucherForm = this.fb.group({
-      date: [new Date().toISOString().split('T')[0], Validators.required],
+    const today = new Date().toISOString().split('T')[0];
+    const validUntil = new Date();
+    validUntil.setDate(validUntil.getDate() + 30);
+    
+    this.devisForm = this.fb.group({
+      quoteNumber: [this.devisService.generateQuoteNumber(), Validators.required],
+      date: [today, Validators.required],
+      validUntil: [validUntil.toISOString().split('T')[0], Validators.required],
       customer: ['', Validators.required],
-      destination: [''],
-      type: ['sale', Validators.required],
+      customerEmail: ['', [Validators.email]],
       products: this.fb.array([this.createProductLine()]),
-      status: ['pending', Validators.required],
+      status: ['draft', Validators.required],
       notes: ['']
     });
   }
 
   ngOnInit(): void {
-    this.loadVouchers();
+    this.loadDevis();
     this.products$ = this.productsService.getProducts();
-    this.customers$ = this.customersService.getCustomers();    this.filteredVouchers$ = combineLatest([
-      this.vouchers$,
-      this.searchTerm$
-    ]).pipe(
-      map(([vouchers, term]) => vouchers.filter(v =>
-        v.customer.toLowerCase().includes(term.toLowerCase())
+    this.filteredDevis$ = combineLatest([this.devis$, this.searchTerm$]).pipe(
+      map(([devis, term]) => devis.filter(d =>
+        d.customer.toLowerCase().includes(term.toLowerCase()) ||
+        d.quoteNumber.toLowerCase().includes(term.toLowerCase())
       ))
     );
   }
 
   get productsFormArray(): FormArray {
-    return this.voucherForm.get('products') as FormArray;
+    return this.devisForm.get('products') as FormArray;
   }
 
   createProductLine(): FormGroup {
@@ -96,8 +99,16 @@ export class ExitVoucherComponent implements OnInit {
     }, 0);
   }
 
-  loadVouchers(): void {
-    this.vouchers$ = this.voucherService.getExitVouchers();
+  calculateTVA(): number {
+    return this.calculateTotal() * 0.19;
+  }
+
+  calculateTTC(): number {
+    return this.calculateTotal() + this.calculateTVA();
+  }
+
+  loadDevis(): void {
+    this.devis$ = this.devisService.getDevis();
   }
 
   onSearchChange(term: string): void {
@@ -106,13 +117,14 @@ export class ExitVoucherComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.voucherForm.invalid) {
+    if (this.devisForm.invalid) {
       this.errorMessage = 'Veuillez remplir tous les champs obligatoires.';
       return;
     }
+    
     this.isLoading = true;
     this.errorMessage = '';
-    const formValue = this.voucherForm.value;
+    const formValue = this.devisForm.value;
     
     const productsWithNames: ProductLine[] = formValue.products.map((p: any) => ({
       ...p,
@@ -120,28 +132,29 @@ export class ExitVoucherComponent implements OnInit {
       subtotal: p.quantity * p.unitPrice
     }));
     
-    const voucherData = {
+    const devisData = {
+      quoteNumber: formValue.quoteNumber,
       date: Timestamp.fromDate(new Date(formValue.date)),
+      validUntil: Timestamp.fromDate(new Date(formValue.validUntil)),
       customer: formValue.customer,
-      destination: formValue.destination,
-      type: formValue.type,
+      customerEmail: formValue.customerEmail,
       products: productsWithNames,
       status: formValue.status,
       notes: formValue.notes
     };
     
     if (this.isEditing && this.editingId) {
-      this.voucherService.updateExitVoucher(this.editingId, voucherData).then(() => {
+      this.devisService.updateDevis(this.editingId, devisData).then(() => {
         this.resetForm();
-        this.loadVouchers();
+        this.loadDevis();
       }).catch(err => {
         this.errorMessage = 'Erreur lors de la modification.';
         console.error(err);
       }).finally(() => this.isLoading = false);
     } else {
-      this.voucherService.addExitVoucher(voucherData).then(() => {
+      this.devisService.addDevis(devisData).then(() => {
         this.resetForm();
-        this.loadVouchers();
+        this.loadDevis();
       }).catch(err => {
         this.errorMessage = 'Erreur lors de l\'ajout.';
         console.error(err);
@@ -149,13 +162,14 @@ export class ExitVoucherComponent implements OnInit {
     }
   }
 
-  editVoucher(voucher: ExitVoucher): void {
+  editDevis(devis: Devis): void {
     this.isEditing = true;
-    this.editingId = voucher.id || null;
-    const dateStr = (voucher.date as Timestamp).toDate().toISOString().split('T')[0];
+    this.editingId = devis.id || null;
+    const dateStr = (devis.date as Timestamp).toDate().toISOString().split('T')[0];
+    const validStr = (devis.validUntil as Timestamp).toDate().toISOString().split('T')[0];
     
     this.productsFormArray.clear();
-    voucher.products.forEach(p => {
+    devis.products.forEach(p => {
       this.productsFormArray.push(this.fb.group({
         productId: [p.productId, Validators.required],
         quantity: [p.quantity, [Validators.required, Validators.min(1)]],
@@ -163,24 +177,25 @@ export class ExitVoucherComponent implements OnInit {
       }));
     });
     
-    this.voucherForm.patchValue({
+    this.devisForm.patchValue({
+      quoteNumber: devis.quoteNumber,
       date: dateStr,
-      customer: voucher.customer,
-      destination: voucher.destination,
-      type: voucher.type,
-      status: voucher.status,
-      notes: voucher.notes
+      validUntil: validStr,
+      customer: devis.customer,
+      customerEmail: devis.customerEmail,
+      status: devis.status,
+      notes: devis.notes
     });
     
     this.showForm = true;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  deleteVoucher(id: string, customer: string): void {
-    if (confirm(`Supprimer le bon de sortie pour "${customer}" ?`)) {
+  deleteDevis(id: string, quoteNumber: string): void {
+    if (confirm(`Supprimer le devis "${quoteNumber}" ?`)) {
       this.isLoading = true;
-      this.voucherService.deleteExitVoucher(id).then(() => {
-        this.loadVouchers();
+      this.devisService.deleteDevis(id).then(() => {
+        this.loadDevis();
       }).catch(err => {
         this.errorMessage = 'Erreur lors de la suppression.';
         console.error(err);
@@ -191,12 +206,16 @@ export class ExitVoucherComponent implements OnInit {
   resetForm(): void {
     this.productsFormArray.clear();
     this.productsFormArray.push(this.createProductLine());
-    this.voucherForm.patchValue({
-      date: new Date().toISOString().split('T')[0],
+    const today = new Date().toISOString().split('T')[0];
+    const validUntil = new Date();
+    validUntil.setDate(validUntil.getDate() + 30);
+    this.devisForm.patchValue({
+      quoteNumber: this.devisService.generateQuoteNumber(),
+      date: today,
+      validUntil: validUntil.toISOString().split('T')[0],
       customer: '',
-      destination: '',
-      type: 'sale',
-      status: 'pending',
+      customerEmail: '',
+      status: 'draft',
       notes: ''
     });
     this.isEditing = false;
@@ -212,8 +231,8 @@ export class ExitVoucherComponent implements OnInit {
     }
   }
 
-  toggleExpand(voucherId: string): void {
-    this.expandedVoucherId = this.expandedVoucherId === voucherId ? null : voucherId;
+  toggleExpand(devisId: string): void {
+    this.expandedDevisId = this.expandedDevisId === devisId ? null : devisId;
   }
 
   getProductName(productId: string): string {
@@ -232,8 +251,12 @@ export class ExitVoucherComponent implements OnInit {
     return new Date(timestamp).toLocaleDateString('fr-FR');
   }
 
-  getTypeLabel(type: string): string {
-    const labels: any = { sale: 'Vente', transfer: 'Transfert', loss: 'Perte' };
-    return labels[type] || type;
+  getStatusLabel(status: string): string {
+    const labels: any = { draft: 'Brouillon', sent: 'Envoyé', accepted: 'Accepté', rejected: 'Refusé' };
+    return labels[status] || status;
+  }
+
+  print(): void {
+    window.print();
   }
 }

@@ -5,24 +5,24 @@ import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { NgSelectModule } from '@ng-select/ng-select';import { Timestamp } from '@angular/fire/firestore';
-import { ExitVoucher, ProductLine } from "../../models/exit-voucher";
-import { ExitVoucherService } from '../../services/exit-voucher.service';
+import { Timestamp } from '@angular/fire/firestore';
+import { PurchaseOrder, ProductLine } from "../../models/purchase-order";
+import { PurchaseOrderService } from '../../services/purchase-order.service';
 import { ProductsService } from '../../services/products.service';
-import { CustomersService } from '../../services/customers.service';
-import { Customer } from '../../models/customer';import { Product } from '../../models/product';
+import { Product } from '../../models/product';
 
 @Component({
-  selector: 'app-exit-voucher',
-  templateUrl: './exit-voucher.component.html',
-  styleUrls: ['./exit-voucher.component.scss'],
-  imports: [ReactiveFormsModule, NgSelectModule, CommonModule, FormsModule],
+  selector: 'app-purchase-order',
+  templateUrl: './purchase-order.component.html',
+  styleUrls: ['./purchase-order.component.scss'],
+  imports: [ReactiveFormsModule, CommonModule, FormsModule],
+  standalone: true
 })
-export class ExitVoucherComponent implements OnInit {
-  vouchers$!: Observable<ExitVoucher[]>;
-  filteredVouchers$!: Observable<ExitVoucher[]>;
+export class PurchaseOrderComponent implements OnInit {
+  orders$!: Observable<PurchaseOrder[]>;
+  filteredOrders$!: Observable<PurchaseOrder[]>;
   products$!: Observable<Product[]>;
-  customers$!: Observable<Customer[]>;  voucherForm: FormGroup;
+  orderForm: FormGroup;
   isLoading = false;
   isEditing = false;
   editingId: string | null = null;
@@ -30,19 +30,19 @@ export class ExitVoucherComponent implements OnInit {
   searchTerm = '';
   searchTerm$ = new BehaviorSubject<string>('');
   showForm = false;
-  expandedVoucherId: string | null = null;
+  expandedOrderId: string | null = null;
 
   constructor(
-    private voucherService: ExitVoucherService,
+    private orderService: PurchaseOrderService,
     private productsService: ProductsService,
-    private customersService: CustomersService,    private fb: FormBuilder,
+    private fb: FormBuilder,
     private router: Router
   ) {
-    this.voucherForm = this.fb.group({
+    this.orderForm = this.fb.group({
+      orderNumber: [this.orderService.generateOrderNumber(), Validators.required],
       date: [new Date().toISOString().split('T')[0], Validators.required],
-      customer: ['', Validators.required],
-      destination: [''],
-      type: ['sale', Validators.required],
+      supplier: ['', Validators.required],
+      expectedDeliveryDate: ['', Validators.required],
       products: this.fb.array([this.createProductLine()]),
       status: ['pending', Validators.required],
       notes: ['']
@@ -50,26 +50,28 @@ export class ExitVoucherComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadVouchers();
+    this.loadOrders();
     this.products$ = this.productsService.getProducts();
-    this.customers$ = this.customersService.getCustomers();    this.filteredVouchers$ = combineLatest([
-      this.vouchers$,
+    this.filteredOrders$ = combineLatest([
+      this.orders$,
       this.searchTerm$
     ]).pipe(
-      map(([vouchers, term]) => vouchers.filter(v =>
-        v.customer.toLowerCase().includes(term.toLowerCase())
+      map(([orders, term]) => orders.filter(o =>
+        o.supplier.toLowerCase().includes(term.toLowerCase()) ||
+        o.orderNumber.toLowerCase().includes(term.toLowerCase())
       ))
     );
   }
 
   get productsFormArray(): FormArray {
-    return this.voucherForm.get('products') as FormArray;
+    return this.orderForm.get('products') as FormArray;
   }
 
   createProductLine(): FormGroup {
     return this.fb.group({
       productId: ['', Validators.required],
-      quantity: [1, [Validators.required, Validators.min(1)]],
+      quantityOrdered: [1, [Validators.required, Validators.min(1)]],
+      quantityReceived: [0, [Validators.min(0)]],
       unitPrice: [0, [Validators.required, Validators.min(0.01)]]
     });
   }
@@ -86,18 +88,18 @@ export class ExitVoucherComponent implements OnInit {
 
   calculateSubtotal(index: number): number {
     const line = this.productsFormArray.at(index).value;
-    return (line.quantity || 0) * (line.unitPrice || 0);
+    return (line.quantityOrdered || 0) * (line.unitPrice || 0);
   }
 
   calculateTotal(): number {
     return this.productsFormArray.controls.reduce((sum, control) => {
       const line = control.value;
-      return sum + ((line.quantity || 0) * (line.unitPrice || 0));
+      return sum + ((line.quantityOrdered || 0) * (line.unitPrice || 0));
     }, 0);
   }
 
-  loadVouchers(): void {
-    this.vouchers$ = this.voucherService.getExitVouchers();
+  loadOrders(): void {
+    this.orders$ = this.orderService.getPurchaseOrders();
   }
 
   onSearchChange(term: string): void {
@@ -106,42 +108,50 @@ export class ExitVoucherComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.voucherForm.invalid) {
+    if (this.orderForm.invalid) {
       this.errorMessage = 'Veuillez remplir tous les champs obligatoires.';
       return;
     }
+    
+    const formValue = this.orderForm.value;
+    const orderDate = new Date(formValue.date);
+    const deliveryDate = new Date(formValue.expectedDeliveryDate);
+    if (deliveryDate < orderDate) {
+      this.errorMessage = 'La date de livraison doit être postérieure à la date de commande.';
+      return;
+    }
+    
     this.isLoading = true;
     this.errorMessage = '';
-    const formValue = this.voucherForm.value;
     
     const productsWithNames: ProductLine[] = formValue.products.map((p: any) => ({
       ...p,
       productName: this.getProductName(p.productId),
-      subtotal: p.quantity * p.unitPrice
+      subtotal: p.quantityOrdered * p.unitPrice
     }));
     
-    const voucherData = {
+    const orderData = {
+      orderNumber: formValue.orderNumber,
       date: Timestamp.fromDate(new Date(formValue.date)),
-      customer: formValue.customer,
-      destination: formValue.destination,
-      type: formValue.type,
+      supplier: formValue.supplier,
+      expectedDeliveryDate: Timestamp.fromDate(new Date(formValue.expectedDeliveryDate)),
       products: productsWithNames,
       status: formValue.status,
       notes: formValue.notes
     };
     
     if (this.isEditing && this.editingId) {
-      this.voucherService.updateExitVoucher(this.editingId, voucherData).then(() => {
+      this.orderService.updatePurchaseOrder(this.editingId, orderData).then(() => {
         this.resetForm();
-        this.loadVouchers();
+        this.loadOrders();
       }).catch(err => {
         this.errorMessage = 'Erreur lors de la modification.';
         console.error(err);
       }).finally(() => this.isLoading = false);
     } else {
-      this.voucherService.addExitVoucher(voucherData).then(() => {
+      this.orderService.addPurchaseOrder(orderData).then(() => {
         this.resetForm();
-        this.loadVouchers();
+        this.loadOrders();
       }).catch(err => {
         this.errorMessage = 'Erreur lors de l\'ajout.';
         console.error(err);
@@ -149,38 +159,40 @@ export class ExitVoucherComponent implements OnInit {
     }
   }
 
-  editVoucher(voucher: ExitVoucher): void {
+  editOrder(order: PurchaseOrder): void {
     this.isEditing = true;
-    this.editingId = voucher.id || null;
-    const dateStr = (voucher.date as Timestamp).toDate().toISOString().split('T')[0];
+    this.editingId = order.id || null;
+    const dateStr = (order.date as Timestamp).toDate().toISOString().split('T')[0];
+    const deliveryStr = (order.expectedDeliveryDate as Timestamp).toDate().toISOString().split('T')[0];
     
     this.productsFormArray.clear();
-    voucher.products.forEach(p => {
+    order.products.forEach(p => {
       this.productsFormArray.push(this.fb.group({
         productId: [p.productId, Validators.required],
-        quantity: [p.quantity, [Validators.required, Validators.min(1)]],
+        quantityOrdered: [p.quantityOrdered, [Validators.required, Validators.min(1)]],
+        quantityReceived: [p.quantityReceived, [Validators.min(0)]],
         unitPrice: [p.unitPrice, [Validators.required, Validators.min(0.01)]]
       }));
     });
     
-    this.voucherForm.patchValue({
+    this.orderForm.patchValue({
+      orderNumber: order.orderNumber,
       date: dateStr,
-      customer: voucher.customer,
-      destination: voucher.destination,
-      type: voucher.type,
-      status: voucher.status,
-      notes: voucher.notes
+      supplier: order.supplier,
+      expectedDeliveryDate: deliveryStr,
+      status: order.status,
+      notes: order.notes
     });
     
     this.showForm = true;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  deleteVoucher(id: string, customer: string): void {
-    if (confirm(`Supprimer le bon de sortie pour "${customer}" ?`)) {
+  deleteOrder(id: string, orderNumber: string): void {
+    if (confirm(`Supprimer la commande "${orderNumber}" ?`)) {
       this.isLoading = true;
-      this.voucherService.deleteExitVoucher(id).then(() => {
-        this.loadVouchers();
+      this.orderService.deletePurchaseOrder(id).then(() => {
+        this.loadOrders();
       }).catch(err => {
         this.errorMessage = 'Erreur lors de la suppression.';
         console.error(err);
@@ -191,11 +203,11 @@ export class ExitVoucherComponent implements OnInit {
   resetForm(): void {
     this.productsFormArray.clear();
     this.productsFormArray.push(this.createProductLine());
-    this.voucherForm.patchValue({
+    this.orderForm.patchValue({
+      orderNumber: this.orderService.generateOrderNumber(),
       date: new Date().toISOString().split('T')[0],
-      customer: '',
-      destination: '',
-      type: 'sale',
+      supplier: '',
+      expectedDeliveryDate: '',
       status: 'pending',
       notes: ''
     });
@@ -212,8 +224,8 @@ export class ExitVoucherComponent implements OnInit {
     }
   }
 
-  toggleExpand(voucherId: string): void {
-    this.expandedVoucherId = this.expandedVoucherId === voucherId ? null : voucherId;
+  toggleExpand(orderId: string): void {
+    this.expandedOrderId = this.expandedOrderId === orderId ? null : orderId;
   }
 
   getProductName(productId: string): string {
@@ -232,8 +244,8 @@ export class ExitVoucherComponent implements OnInit {
     return new Date(timestamp).toLocaleDateString('fr-FR');
   }
 
-  getTypeLabel(type: string): string {
-    const labels: any = { sale: 'Vente', transfer: 'Transfert', loss: 'Perte' };
-    return labels[type] || type;
+  getStatusLabel(status: string): string {
+    const labels: any = { pending: 'En attente', partial: 'Partielle', received: 'Reçue', cancelled: 'Annulée' };
+    return labels[status] || status;
   }
 }

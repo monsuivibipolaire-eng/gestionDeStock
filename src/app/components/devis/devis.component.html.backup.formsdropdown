@@ -54,7 +54,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block text-gray-700 font-medium mb-2">Client *</label>
-          <ng-select formControlName="customer" [items]="(customers$ | async) ?? []" bindLabel="name" bindValue="name" placeholder="-- Sélectionnez un client --" [searchable]="true" [clearable]="true" class="w-full"></ng-select>
+          <input formControlName="customer" type="text" />
         </div>
         <div>
           <label class="block text-gray-700 font-medium mb-2">Email Client</label>

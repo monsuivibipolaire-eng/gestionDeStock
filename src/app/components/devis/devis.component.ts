@@ -5,24 +5,24 @@ import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { Timestamp } from '@angular/fire/firestore';
+import { NgSelectModule } from '@ng-select/ng-select';import { Timestamp } from '@angular/fire/firestore';
 import { Devis, ProductLine } from "../../models/devis";
 import { DevisService } from '../../services/devis.service';
 import { ProductsService } from '../../services/products.service';
-import { Product } from '../../models/product';
+import { CustomersService } from '../../services/customers.service';
+import { Customer } from '../../models/customer';import { Product } from '../../models/product';
 
 @Component({
   selector: 'app-devis',
   templateUrl: './devis.component.html',
   styleUrls: ['./devis.component.scss'],
-  imports: [ReactiveFormsModule, CommonModule, FormsModule],
-  standalone: true
+  imports: [ReactiveFormsModule, NgSelectModule, CommonModule, FormsModule],
 })
 export class DevisComponent implements OnInit {
   devis$!: Observable<Devis[]>;
   filteredDevis$!: Observable<Devis[]>;
   products$!: Observable<Product[]>;
-  devisForm: FormGroup;
+  customers$!: Observable<Customer[]>;  devisForm: FormGroup;
   isLoading = false;
   isEditing = false;
   editingId: string | null = null;
@@ -35,7 +35,7 @@ export class DevisComponent implements OnInit {
   constructor(
     private devisService: DevisService,
     private productsService: ProductsService,
-    private fb: FormBuilder,
+    private customersService: CustomersService,    private fb: FormBuilder,
     private router: Router
   ) {
     const today = new Date().toISOString().split('T')[0];
@@ -57,7 +57,7 @@ export class DevisComponent implements OnInit {
   ngOnInit(): void {
     this.loadDevis();
     this.products$ = this.productsService.getProducts();
-    this.filteredDevis$ = combineLatest([this.devis$, this.searchTerm$]).pipe(
+    this.customers$ = this.customersService.getCustomers();    this.filteredDevis$ = combineLatest([this.devis$, this.searchTerm$]).pipe(
       map(([devis, term]) => devis.filter(d =>
         d.customer.toLowerCase().includes(term.toLowerCase()) ||
         d.quoteNumber.toLowerCase().includes(term.toLowerCase())

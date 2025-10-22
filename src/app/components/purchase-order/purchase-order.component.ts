@@ -5,24 +5,24 @@ import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { Timestamp } from '@angular/fire/firestore';
+import { NgSelectModule } from '@ng-select/ng-select';import { Timestamp } from '@angular/fire/firestore';
 import { PurchaseOrder, ProductLine } from "../../models/purchase-order";
 import { PurchaseOrderService } from '../../services/purchase-order.service';
 import { ProductsService } from '../../services/products.service';
-import { Product } from '../../models/product';
+import { SuppliersService } from '../../services/suppliers.service';
+import { Supplier } from '../../models/supplier';import { Product } from '../../models/product';
 
 @Component({
   selector: 'app-purchase-order',
   templateUrl: './purchase-order.component.html',
   styleUrls: ['./purchase-order.component.scss'],
-  imports: [ReactiveFormsModule, CommonModule, FormsModule],
-  standalone: true
+  imports: [ReactiveFormsModule, NgSelectModule, CommonModule, FormsModule],
 })
 export class PurchaseOrderComponent implements OnInit {
   orders$!: Observable<PurchaseOrder[]>;
   filteredOrders$!: Observable<PurchaseOrder[]>;
   products$!: Observable<Product[]>;
-  orderForm: FormGroup;
+  suppliers$!: Observable<Supplier[]>;  orderForm: FormGroup;
   isLoading = false;
   isEditing = false;
   editingId: string | null = null;
@@ -35,7 +35,7 @@ export class PurchaseOrderComponent implements OnInit {
   constructor(
     private orderService: PurchaseOrderService,
     private productsService: ProductsService,
-    private fb: FormBuilder,
+    private suppliersService: SuppliersService,    private fb: FormBuilder,
     private router: Router
   ) {
     this.orderForm = this.fb.group({
@@ -52,7 +52,7 @@ export class PurchaseOrderComponent implements OnInit {
   ngOnInit(): void {
     this.loadOrders();
     this.products$ = this.productsService.getProducts();
-    this.filteredOrders$ = combineLatest([
+    this.suppliers$ = this.suppliersService.getSuppliers();    this.filteredOrders$ = combineLatest([
       this.orders$,
       this.searchTerm$
     ]).pipe(

@@ -26,18 +26,18 @@
         </div>
         <div>
           <label class="block text-gray-700 font-medium mb-2">Date *</label>
-          <input formControlName="date" type="date" />
+          <input formControlName="date" type="date" class="w-full px-4 py-2 border rounded-lg" />
         </div>
         <div>
           <label class="block text-gray-700 font-medium mb-2">Fournisseur *</label>
-          <ng-select formControlName="supplier" [items]="(suppliers$ | async) ?? []" bindLabel="name" bindValue="name" placeholder="-- Sélectionnez un fournisseur --" [searchable]="true" [clearable]="true" class="w-full"></ng-select>
+          <input formControlName="supplier" type="text" class="w-full px-4 py-2 border rounded-lg" />
         </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block text-gray-700 font-medium mb-2">Date Livraison Prévue *</label>
-          <input formControlName="expectedDeliveryDate" type="date" />
+          <input formControlName="expectedDeliveryDate" type="date" class="w-full px-4 py-2 border rounded-lg" />
         </div>
         <div>
           <label class="block text-gray-700 font-medium mb-2">Statut</label>

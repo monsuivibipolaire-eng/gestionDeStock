@@ -5,24 +5,24 @@ import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { NgSelectModule } from '@ng-select/ng-select';import { Timestamp } from '@angular/fire/firestore';
-import { ExitVoucher, ProductLine } from "../../models/exit-voucher";
-import { ExitVoucherService } from '../../services/exit-voucher.service';
+import { Timestamp } from '@angular/fire/firestore';
+import { EntryVoucher, ProductLine } from "../../models/entry-voucher";
+import { EntryVoucherService } from '../../services/entry-voucher.service';
 import { ProductsService } from '../../services/products.service';
-import { CustomersService } from '../../services/customers.service';
-import { Customer } from '../../models/customer';import { Product } from '../../models/product';
+import { Product } from '../../models/product';
 
 @Component({
-  selector: 'app-exit-voucher',
-  templateUrl: './exit-voucher.component.html',
-  styleUrls: ['./exit-voucher.component.scss'],
-  imports: [ReactiveFormsModule, NgSelectModule, CommonModule, FormsModule],
+  selector: 'app-entry-voucher',
+  templateUrl: './entry-voucher.component.html',
+  styleUrls: ['./entry-voucher.component.scss'],
+  imports: [ReactiveFormsModule, CommonModule, FormsModule],
+  standalone: true
 })
-export class ExitVoucherComponent implements OnInit {
-  vouchers$!: Observable<ExitVoucher[]>;
-  filteredVouchers$!: Observable<ExitVoucher[]>;
+export class EntryVoucherComponent implements OnInit {
+  vouchers$!: Observable<EntryVoucher[]>;
+  filteredVouchers$!: Observable<EntryVoucher[]>;
   products$!: Observable<Product[]>;
-  customers$!: Observable<Customer[]>;  voucherForm: FormGroup;
+  voucherForm: FormGroup;
   isLoading = false;
   isEditing = false;
   editingId: string | null = null;
@@ -30,20 +30,18 @@ export class ExitVoucherComponent implements OnInit {
   searchTerm = '';
   searchTerm$ = new BehaviorSubject<string>('');
   showForm = false;
-  expandedVoucherId: string | null = null;
+  expandedVoucherId: string | null = null;  // Pour accordion lignes produits
 
   constructor(
-    private voucherService: ExitVoucherService,
+    private voucherService: EntryVoucherService,
     private productsService: ProductsService,
-    private customersService: CustomersService,    private fb: FormBuilder,
+    private fb: FormBuilder,
     private router: Router
   ) {
     this.voucherForm = this.fb.group({
       date: [new Date().toISOString().split('T')[0], Validators.required],
-      customer: ['', Validators.required],
-      destination: [''],
-      type: ['sale', Validators.required],
-      products: this.fb.array([this.createProductLine()]),
+      supplier: ['', Validators.required],
+      products: this.fb.array([this.createProductLine()]),  // FormArray avec 1 ligne initiale
       status: ['pending', Validators.required],
       notes: ['']
     });
@@ -52,12 +50,12 @@ export class ExitVoucherComponent implements OnInit {
   ngOnInit(): void {
     this.loadVouchers();
     this.products$ = this.productsService.getProducts();
-    this.customers$ = this.customersService.getCustomers();    this.filteredVouchers$ = combineLatest([
+    this.filteredVouchers$ = combineLatest([
       this.vouchers$,
       this.searchTerm$
     ]).pipe(
       map(([vouchers, term]) => vouchers.filter(v =>
-        v.customer.toLowerCase().includes(term.toLowerCase())
+        v.supplier.toLowerCase().includes(term.toLowerCase())
       ))
     );
   }
@@ -97,7 +95,7 @@ export class ExitVoucherComponent implements OnInit {
   }
 
   loadVouchers(): void {
-    this.vouchers$ = this.voucherService.getExitVouchers();
+    this.vouchers$ = this.voucherService.getEntryVouchers();
   }
 
   onSearchChange(term: string): void {
@@ -122,16 +120,14 @@ export class ExitVoucherComponent implements OnInit {
     
     const voucherData = {
       date: Timestamp.fromDate(new Date(formValue.date)),
-      customer: formValue.customer,
-      destination: formValue.destination,
-      type: formValue.type,
+      supplier: formValue.supplier,
       products: productsWithNames,
       status: formValue.status,
       notes: formValue.notes
     };
     
     if (this.isEditing && this.editingId) {
-      this.voucherService.updateExitVoucher(this.editingId, voucherData).then(() => {
+      this.voucherService.updateEntryVoucher(this.editingId, voucherData).then(() => {
         this.resetForm();
         this.loadVouchers();
       }).catch(err => {
@@ -139,7 +135,7 @@ export class ExitVoucherComponent implements OnInit {
         console.error(err);
       }).finally(() => this.isLoading = false);
     } else {
-      this.voucherService.addExitVoucher(voucherData).then(() => {
+      this.voucherService.addEntryVoucher(voucherData).then(() => {
         this.resetForm();
         this.loadVouchers();
       }).catch(err => {
@@ -149,7 +145,7 @@ export class ExitVoucherComponent implements OnInit {
     }
   }
 
-  editVoucher(voucher: ExitVoucher): void {
+  editVoucher(voucher: EntryVoucher): void {
     this.isEditing = true;
     this.editingId = voucher.id || null;
     const dateStr = (voucher.date as Timestamp).toDate().toISOString().split('T')[0];
@@ -165,9 +161,7 @@ export class ExitVoucherComponent implements OnInit {
     
     this.voucherForm.patchValue({
       date: dateStr,
-      customer: voucher.customer,
-      destination: voucher.destination,
-      type: voucher.type,
+      supplier: voucher.supplier,
       status: voucher.status,
       notes: voucher.notes
     });
@@ -176,10 +170,10 @@ export class ExitVoucherComponent implements OnInit {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  deleteVoucher(id: string, customer: string): void {
-    if (confirm(`Supprimer le bon de sortie pour "${customer}" ?`)) {
+  deleteVoucher(id: string, supplier: string): void {
+    if (confirm(`Supprimer le bon du fournisseur "${supplier}" ?`)) {
       this.isLoading = true;
-      this.voucherService.deleteExitVoucher(id).then(() => {
+      this.voucherService.deleteEntryVoucher(id).then(() => {
         this.loadVouchers();
       }).catch(err => {
         this.errorMessage = 'Erreur lors de la suppression.';
@@ -193,9 +187,7 @@ export class ExitVoucherComponent implements OnInit {
     this.productsFormArray.push(this.createProductLine());
     this.voucherForm.patchValue({
       date: new Date().toISOString().split('T')[0],
-      customer: '',
-      destination: '',
-      type: 'sale',
+      supplier: '',
       status: 'pending',
       notes: ''
     });
@@ -230,10 +222,5 @@ export class ExitVoucherComponent implements OnInit {
       return timestamp.toDate().toLocaleDateString('fr-FR');
     }
     return new Date(timestamp).toLocaleDateString('fr-FR');
-  }
-
-  getTypeLabel(type: string): string {
-    const labels: any = { sale: 'Vente', transfer: 'Transfert', loss: 'Perte' };
-    return labels[type] || type;
   }
 }

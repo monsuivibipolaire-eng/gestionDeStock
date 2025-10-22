@@ -264,3 +264,27 @@
     background: #f9f9f9 !important;
   }
 }
+
+/* Print CSS pour impression individuelle (printSingle) */
+@media print {
+  /* Cache tous accordions fermés (seulement expanded visible) */
+  .bg-gray-50[hidden] {
+    display: block !important;
+  }
+  
+  /* Force expansion de l'accordion imprimé */
+  .voucher-card {
+    page-break-inside: avoid;
+  }
+  
+  /* Cache header accordion (ligne cliquable) si accordion expanded */
+  .voucher-card .cursor-pointer.hover\:bg-gray-50 {
+    display: none !important;
+  }
+  
+  /* Affiche seulement contenu détails (lignes produits) */
+  .voucher-card > div:last-child {
+    display: block !important;
+    border: none !important;
+  }
+}

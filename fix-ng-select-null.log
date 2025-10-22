@@ -1,0 +1,6 @@
+Wed Oct 22 15:28:13 CET 2025: Fix ng-select null errors...
+Backups créés
+✅ Fixed: suppliers.component.html ([items] avec ?? [])
+✅ Fixed: customers.component.html ([items] avec ?? [])
+Validation...
+✅ TS OK! No TS2322 errors

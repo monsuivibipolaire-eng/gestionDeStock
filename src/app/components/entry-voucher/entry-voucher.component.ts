@@ -5,24 +5,24 @@ import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { Timestamp } from '@angular/fire/firestore';
+import { NgSelectModule } from '@ng-select/ng-select';import { Timestamp } from '@angular/fire/firestore';
 import { EntryVoucher, ProductLine } from "../../models/entry-voucher";
 import { EntryVoucherService } from '../../services/entry-voucher.service';
 import { ProductsService } from '../../services/products.service';
-import { Product } from '../../models/product';
+import { SuppliersService } from '../../services/suppliers.service';
+import { Supplier } from '../../models/supplier';import { Product } from '../../models/product';
 
 @Component({
   selector: 'app-entry-voucher',
   templateUrl: './entry-voucher.component.html',
   styleUrls: ['./entry-voucher.component.scss'],
-  imports: [ReactiveFormsModule, CommonModule, FormsModule],
-  standalone: true
+  imports: [ReactiveFormsModule, NgSelectModule, CommonModule, FormsModule],
 })
 export class EntryVoucherComponent implements OnInit {
   vouchers$!: Observable<EntryVoucher[]>;
   filteredVouchers$!: Observable<EntryVoucher[]>;
   products$!: Observable<Product[]>;
-  voucherForm: FormGroup;
+  suppliers$!: Observable<Supplier[]>;  voucherForm: FormGroup;
   isLoading = false;
   isEditing = false;
   editingId: string | null = null;
@@ -35,7 +35,7 @@ export class EntryVoucherComponent implements OnInit {
   constructor(
     private voucherService: EntryVoucherService,
     private productsService: ProductsService,
-    private fb: FormBuilder,
+    private suppliersService: SuppliersService,    private fb: FormBuilder,
     private router: Router
   ) {
     this.voucherForm = this.fb.group({
@@ -50,7 +50,7 @@ export class EntryVoucherComponent implements OnInit {
   ngOnInit(): void {
     this.loadVouchers();
     this.products$ = this.productsService.getProducts();
-    this.filteredVouchers$ = combineLatest([
+    this.suppliers$ = this.suppliersService.getSuppliers();    this.filteredVouchers$ = combineLatest([
       this.vouchers$,
       this.searchTerm$
     ]).pipe(

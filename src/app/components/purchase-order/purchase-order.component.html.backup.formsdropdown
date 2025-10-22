@@ -30,7 +30,7 @@
         </div>
         <div>
           <label class="block text-gray-700 font-medium mb-2">Fournisseur *</label>
-          <ng-select formControlName="supplier" [items]="(suppliers$ | async) ?? []" bindLabel="name" bindValue="name" placeholder="-- Sélectionnez un fournisseur --" [searchable]="true" [clearable]="true" class="w-full"></ng-select>
+          <input formControlName="supplier" type="text" />
         </div>
       </div>
 
