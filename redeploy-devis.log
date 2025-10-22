@@ -1,0 +1,55 @@
+[0;32m[INFO][0m Wed Oct 22 15:08:19 CET 2025: Ajout lien Devis dans menu + re-deploy...
+[0;32m[INFO][0m Backup: src/app/app.component.html.backup.redeploy
+[0;32m[INFO][0m ❌ Lien Devis absent, ajout manuel...
+[0;32m[INFO][0m ✅ Lien Devis ajouté après Commandes dans app.component.html
+[0;32m[INFO][0m Menu actuel (liens routerLink) :
+routerLink="/products"
+routerLink="/entry-voucher"
+routerLink="/exit-voucher"
+routerLink="/purchase-order"
+routerLink="/devis"
+routerLink="/auth"
+[0;32m[INFO][0m Build Angular production...
+❯ Building...
+✔ Building...
+Initial chunk files   | Names         |  Raw size | Estimated transfer size
+main-DGIRBLCJ.js      | main          | 754.54 kB |               184.90 kB
+styles-VBGHFUQV.css   | styles        |  53.31 kB |                 5.38 kB
+polyfills-5CFQRCPP.js | polyfills     |  34.59 kB |                11.33 kB
+
+                      | Initial total | 842.44 kB |               201.62 kB
+
+Application bundle generation complete. [9.823 seconds] - 2025-10-22T14:08:31.909Z
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mbundle initial exceeded maximum budget. Budget 500.00 kB was not met by 342.44 kB with a total of 842.44 kB.[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1m2 rules skipped due to selector errors:
+  () -> Empty sub-selector
+  () -> Empty sub-selector[0m
+
+
+Output location: /Users/salemkammoun/Documents/majdi/gestion-stock-app/dist/gestion-stock-app
+
+[0;32m[INFO][0m ✅ BUILD SUCCESS
+[0;32m[INFO][0m Public dir Firebase: dist/gestion-stock-app/browser
+[0;32m[INFO][0m ✅ Dossier dist valide (848K)
+[0;32m[INFO][0m Deploy Firebase Hosting...
+
+=== Deploying to 'gestiondestock-5eb46'...
+
+i  deploying hosting
+i  hosting[gestiondestock-5eb46]: beginning deploy...
+i  hosting[gestiondestock-5eb46]: found 4 files in dist/gestion-stock-app/browser
+✔  hosting[gestiondestock-5eb46]: file upload complete
+i  hosting[gestiondestock-5eb46]: finalizing version...
+✔  hosting[gestiondestock-5eb46]: version finalized
+i  hosting[gestiondestock-5eb46]: releasing new version...
+✔  hosting[gestiondestock-5eb46]: release complete
+
+✔  Deploy complete!
+
+Project Console: https://console.firebase.google.com/project/gestiondestock-5eb46/overview
+Hosting URL: https://gestiondestock-5eb46.web.app
+[0;32m[INFO][0m ✅ DEPLOY SUCCESS !
+[0;32m[INFO][0m Logs: redeploy-devis.log

@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
+import { DevisComponent } from './components/devis/devis.component';import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule, Routes } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
@@ -15,7 +15,7 @@ import { ExitVoucherComponent } from './components/exit-voucher/exit-voucher.com
 import { PurchaseOrderComponent } from './components/purchase-order/purchase-order.component';
 
 const routes: Routes = [
-  { path: 'auth', component: AuthComponent },
+  { path: 'devis', component: DevisComponent },  { path: 'auth', component: AuthComponent },
   { path: 'products', component: ProductsComponent },
   { path: 'entry-voucher', component: EntryVoucherComponent },
   { path: 'exit-voucher', component: ExitVoucherComponent },

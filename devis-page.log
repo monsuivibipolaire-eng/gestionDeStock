@@ -1,0 +1,8 @@
+[0;32m[INFO][0m Wed Oct 22 15:06:54 CET 2025: Génération page Devis (clone Exit Voucher)...
+[0;32m[INFO][0m ✅ Created: models/devis.ts
+[0;32m[INFO][0m ✅ Created: services/devis.service.ts
+[0;32m[INFO][0m ✅ Created: components/devis/devis.component.ts
+[0;32m[INFO][0m ✅ Created: components/devis/devis.component.html
+[0;32m[INFO][0m ✅ Created: components/devis/devis.component.scss
+[0;32m[INFO][0m ✅ Lien Devis ajouté dans menu sidebar
+[0;32m[INFO][0m ✅ TS OK!

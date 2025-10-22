@@ -1,0 +1,161 @@
+<div class="container mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold text-gray-800 mb-6">Bons de Sortie (Exit Vouchers)</h1>
+
+  <div *ngIf="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+    <strong>Erreur :</strong> {{ errorMessage }}
+    <button (click)="errorMessage = ''" class="float-right">&times;</button>
+  </div>
+
+  <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+    <input type="text" [ngModel]="searchTerm" (ngModelChange)="onSearchChange($event)"
+           placeholder="Rechercher par client..." class="w-full md:w-1/2 px-4 py-2 border rounded-lg" />
+    <button (click)="toggleForm()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg">
+      <span *ngIf="!showForm">+ Ajouter un Bon</span>
+      <span *ngIf="showForm">Fermer</span>
+    </button>
+  </div>
+
+  <!-- Formulaire -->
+  <div *ngIf="showForm" class="bg-white shadow-md rounded-lg p-6 mb-6">
+    <h2 class="text-2xl font-semibold mb-4">{{ isEditing ? 'Modifier' : 'Nouveau' }} Bon de Sortie</h2>
+    <form [formGroup]="voucherForm" (ngSubmit)="onSubmit()" class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-gray-700 font-medium mb-2">Date *</label>
+          <input formControlName="date" type="date" class="w-full px-4 py-2 border rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-gray-700 font-medium mb-2">Client / Destinataire *</label>
+          <input formControlName="customer" type="text" class="w-full px-4 py-2 border rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-gray-700 font-medium mb-2">Type *</label>
+          <select formControlName="type" class="w-full px-4 py-2 border rounded-lg">
+            <option value="sale">Vente</option>
+            <option value="transfer">Transfert</option>
+            <option value="loss">Perte</option>
+          </select>
+        </div>
+      </div>
+
+      <div *ngIf="voucherForm.get('type')?.value === 'transfer'">
+        <label class="block text-gray-700 font-medium mb-2">Destination</label>
+        <input formControlName="destination" type="text" class="w-full px-4 py-2 border rounded-lg" />
+      </div>
+
+      <!-- Lignes Produits -->
+      <div class="border-t pt-4">
+        <h3 class="text-lg font-semibold mb-3">Produits</h3>
+        <div formArrayName="products" class="space-y-3">
+          <div *ngFor="let product of productsFormArray.controls; let i = index" [formGroupName]="i"
+               class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end bg-gray-50 p-3 rounded">
+            <div class="md:col-span-4">
+              <label class="block text-sm text-gray-600 mb-1">Produit *</label>
+              <select formControlName="productId" class="w-full px-3 py-2 border rounded">
+                <option value="">-- Sélectionnez --</option>
+                <option *ngFor="let p of products$ | async" [value]="p.id">{{ p.name }} (Stock: {{ p.quantity }})</option>
+              </select>
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm text-gray-600 mb-1">Quantité *</label>
+              <input formControlName="quantity" type="number" class="w-full px-3 py-2 border rounded" />
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm text-gray-600 mb-1">Prix Unit. (€) *</label>
+              <input formControlName="unitPrice" type="number" step="0.01" class="w-full px-3 py-2 border rounded" />
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm text-gray-600 mb-1">Sous-total</label>
+              <input [value]="calculateSubtotal(i) | number:'1.2-2'" readonly class="w-full px-3 py-2 border rounded bg-gray-100" />
+            </div>
+            <div class="md:col-span-2 flex gap-2">
+              <button type="button" (click)="addProductLine()" class="bg-blue-500 text-white px-3 py-2 rounded">+</button>
+              <button type="button" (click)="removeProductLine(i)" [disabled]="productsFormArray.length === 1"
+                      class="bg-red-500 text-white px-3 py-2 rounded disabled:bg-gray-300">-</button>
+            </div>
+          </div>
+        </div>
+        <div class="mt-4 text-right">
+          <span class="text-xl font-bold">Total Bon : {{ calculateTotal() | number:'1.2-2' }} €</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-gray-700 font-medium mb-2">Statut</label>
+          <select formControlName="status" class="w-full px-4 py-2 border rounded-lg">
+            <option value="pending">En attente</option>
+            <option value="validated">Validé</option>
+            <option value="cancelled">Annulé</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-gray-700 font-medium mb-2">Notes</label>
+          <input formControlName="notes" type="text" class="w-full px-4 py-2 border rounded-lg" />
+        </div>
+      </div>
+
+      <div class="flex gap-4">
+        <button type="submit" [disabled]="isLoading || voucherForm.invalid"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg disabled:bg-gray-400">
+          <span *ngIf="isLoading">Enregistrement...</span>
+          <span *ngIf="!isLoading">{{ isEditing ? 'Mettre à jour' : 'Ajouter' }}</span>
+        </button>
+        <button type="button" (click)="resetForm()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg">Annuler</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Liste avec accordion -->
+  <div *ngIf="!isLoading" class="space-y-4">
+    <div *ngFor="let voucher of filteredVouchers$ | async" class="bg-white shadow rounded-lg overflow-hidden">
+      <div class="px-6 py-4 flex justify-between items-center cursor-pointer hover:bg-gray-50"
+           (click)="toggleExpand(voucher.id!)">
+        <div class="flex-1 grid grid-cols-5 gap-4">
+          <div><strong>Date:</strong> {{ formatDate(voucher.date) }}</div>
+          <div><strong>Client:</strong> {{ voucher.customer }}</div>
+          <div><strong>Type:</strong> <span [ngClass]="{
+            'bg-blue-100 text-blue-800': voucher.type === 'sale',
+            'bg-purple-100 text-purple-800': voucher.type === 'transfer',
+            'bg-orange-100 text-orange-800': voucher.type === 'loss'
+          }" class="px-2 py-1 rounded">{{ getTypeLabel(voucher.type) }}</span></div>
+          <div><strong>Total:</strong> {{ voucher.totalAmount | number:'1.2-2' }} €</div>
+          <div><span [ngClass]="{
+            'bg-yellow-100 text-yellow-800': voucher.status === 'pending',
+            'bg-green-100 text-green-800': voucher.status === 'validated',
+            'bg-red-100 text-red-800': voucher.status === 'cancelled'
+          }" class="px-2 py-1 rounded">{{ voucher.status }}</span></div>
+        </div>
+        <button class="text-blue-600">{{ expandedVoucherId === voucher.id ? '▼' : '►' }}</button>
+      </div>
+      
+      <div *ngIf="expandedVoucherId === voucher.id" class="px-6 py-4 bg-gray-50 border-t">
+        <table class="min-w-full">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-2 text-left text-sm">Produit</th>
+              <th class="px-4 py-2 text-left text-sm">Quantité</th>
+              <th class="px-4 py-2 text-left text-sm">Prix Unit.</th>
+              <th class="px-4 py-2 text-left text-sm">Sous-total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let line of voucher.products" class="border-t">
+              <td class="px-4 py-2">{{ line.productName }}</td>
+              <td class="px-4 py-2">{{ line.quantity }}</td>
+              <td class="px-4 py-2">{{ line.unitPrice | number:'1.2-2' }} €</td>
+              <td class="px-4 py-2 font-semibold">{{ line.subtotal | number:'1.2-2' }} €</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="mt-4 flex gap-2">
+          <button (click)="editVoucher(voucher)" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded">Modifier</button>
+          <button (click)="deleteVoucher(voucher.id!, voucher.customer)" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">Supprimer</button>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="(filteredVouchers$ | async)?.length === 0" class="text-center py-8 text-gray-500">
+      Aucun bon de sortie trouvé.
+    </div>
+  </div>
+</div>
