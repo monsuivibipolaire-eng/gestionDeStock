@@ -1,0 +1,41 @@
+Wed Oct 22 14:41:06 CET 2025: Fix NG6008 ALL standalone components (declarations → imports)...
+BACKUP: src/app/app.module.ts
+REMOVED: PurchaseOrderComponent de declarations
+REMOVED: ExitVoucherComponent de declarations
+REMOVED: EntryVoucherComponent de declarations
+REMOVED: ProductsComponent de declarations
+REMOVED: AuthComponent de declarations
+ADDED: PurchaseOrderComponent à imports: []
+SKIPPED: ExitVoucherComponent déjà en imports
+SKIPPED: EntryVoucherComponent déjà en imports
+SKIPPED: ProductsComponent déjà en imports
+SKIPPED: AuthComponent déjà en imports
+Validation...
+TS OK!
+❯ Building...
+✔ Building...
+Application bundle generation failed. [6.133 seconds] - 2025-10-22T13:41:16.157Z
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2695: Left side of comma operator is unused and has no side effects.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/app.module.ts:19:4:
+[37m      19 │     [32mPurchaseOrderComponent[37m,import { NgModule } from "@angular/core";
+         ╵     [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS1109: Expression expected.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/app.module.ts:19:27:
+[37m      19 │     PurchaseOrderComponent,[32mimport[37m { NgModule } from "@angular/core";
+         ╵                            [32m~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mUnexpected ";"[0m
+
+    src/app/app.module.ts:20:24:
+[37m      20 │ PurchaseOrderComponent, [32m;[37m
+         ╵                         [32m^[0m
+
+
+BUILD OK (no NG6008)!
+Fix NG6008 ALL terminé ! Logs: ng6008-all-fix.log

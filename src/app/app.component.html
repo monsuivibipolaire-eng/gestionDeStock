@@ -1,10 +1,11 @@
 <nav class="bg-blue-600 p-4 text-white">
   <ul class="flex space-x-4">
     <li><a routerLink="/products" class="hover:underline">Produits</a></li>
-    <li><a routerLink="/entry" class="hover:underline">Bons Entrée</a></li>
-    <li><a routerLink="/exit" class="hover:underline">Bons Sortie</a></li>
-    <li><a routerLink="/commande" class="hover:underline">Bons Commande</a></li>
-    <li><a (click)="logout()" class="hover:underline cursor-pointer">Déconnexion</a></li>
+    <li><a routerLink="/entry-voucher" class="hover:underline">Bons d'Entrée</a></li>
+    <li><a routerLink="/exit-voucher" class="hover:underline">Bons de Sortie</a></li>
+    <li><a routerLink="/purchase-order" class="hover:underline">Bons de Commande</a></li>
+    <li><a routerLink="/auth" class="hover:underline">Connexion</a></li>
   </ul>
 </nav>
+
 <router-outlet></router-outlet>
