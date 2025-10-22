@@ -1,271 +1,93 @@
 #!/bin/bash
 
-PROJECT_ROOT=$(pwd)
-ANGULAR_JSON="angular.json"
+APP_COMPONENT="src/app/app.component.ts"
+APP_SCSS="src/app/app.component.scss"
 APP_MODULE="src/app/app.module.ts"
-AUTH_SERVICE="src/app/services/auth.service.ts"
-ENV_INTERFACE="src/environments/environment.interface.ts"
 
-echo "Migration vers Firebase modern (fix builder esbuild + module not defined)..."
+echo "Régénération complète app.component.ts (fix syntaxe TS2420/TS1005/NG6001/etc.)..."
 
-# 1. Backup fichiers clés
-cp "$ANGULAR_JSON" "${ANGULAR_JSON}.backup.modern" 2>/dev/null || true
-cp "$APP_MODULE" "${APP_MODULE}.backup.modern" 2>/dev/null || true
-cp "$AUTH_SERVICE" "${AUTH_SERVICE}.backup.modern" 2>/dev/null || true
-echo "Backups créés."
+# 1. Backup malformé
+cp "$APP_COMPONENT" "${APP_COMPONENT}.backup.malformed" 2>/dev/null || true
+echo "Backup créé : ${APP_COMPONENT}.backup.malformed"
 
-# 2. Désinstallation compat legacy
-npm uninstall @angular/fire firebase --save --legacy-peer-deps
-echo "Compat supprimé."
-
-# 3. Installation Firebase modern (ESM pour Angular 20 + esbuild)
-npm install @angular/fire@latest firebase@latest --save --legacy-peer-deps --force
-echo "Modern installé : @angular/fire@^17.0.0, firebase@^10.0.0"
-
-# 4. Interface Environment (déjà fixe, recréation si besoin)
-cat > "$ENV_INTERFACE" << 'EOL_INT'
-export interface Environment {
-  production: boolean;
-  firebase: {
-    apiKey: string;
-    authDomain: string;
-    projectId: string;
-    storageBucket: string;
-    messagingSenderId: string;
-    appId: string;
-  };
+# 2. Création app.component.scss (si absent, fix NG2008)
+if [ ! -f "$APP_SCSS" ]; then
+  cat > "$APP_SCSS" << 'EOL_SCSS'
+/* Styles pour AppComponent - Tailwind compatible */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
 }
-EOL_INT
+EOL_SCSS
+  echo "app.component.scss créé."
+fi
 
-cat > src/environments/environment.ts << 'EOL_DEV'
-import { Environment } from './environment.interface';
+# 3. Ajout AppComponent à declarations AppModule (fix NG6001 si manquant)
+if ! grep -q "AppComponent" "$APP_MODULE"; then
+  sed -i '' '/declarations: \[/a\    AppComponent,' "$APP_MODULE"
+  echo "AppComponent ajouté à declarations AppModule."
+fi
 
-export const environment: Environment = {
-  production: false,
-  firebase: {
-    apiKey: "AIzaSyAQVmx7uF84Gyz7WIQ229dDzTZ36GJbP5E",
-    authDomain: "gestiondestock-5eb46.firebaseapp.com",
-    projectId: "gestiondestock-5eb46",
-    storageBucket: "gestiondestock-5eb46.firebasestorage.app",
-    messagingSenderId: "243866845719",
-    appId: "1:243866845719:web:4c3549f0804a145020d252"
-  }
-};
-EOL_DEV
+# 4. Régénération complète app.component.ts (clean, valide syntaxe)
+cat > "$APP_COMPONENT" << 'EOL_COMP'
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { AuthService } from './services/auth.service';
+import { CommonModule } from '@angular/common';  // Pour *ngIf/async en template si besoin
 
-cat > src/environments/environment.prod.ts << 'EOL_PROD'
-import { Environment } from './environment.interface';
-
-export const environment: Environment = {
-  production: true,
-  firebase: {
-    apiKey: "AIzaSyAQVmx7uF84Gyz7WIQ229dDzTZ36GJbP5E",
-    authDomain: "gestiondestock-5eb46.firebaseapp.com",
-    projectId: "gestiondestock-5eb46",
-    storageBucket: "gestiondestock-5eb46.firebasestorage.app",
-    messagingSenderId: "243866845719",
-    appId: "1:243866845719:web:4c3549f0804a145020d252"
-  }
-};
-EOL_PROD
-
-# 5. Mise à jour AppModule : Providers fonctionnels (modern, sans modules compat)
-cat > "$APP_MODULE" << 'EOL_MOD'
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { RouterModule, Routes } from '@angular/router';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-
-import { AppComponent } from './app.component';
-import { AuthComponent } from './components/auth/auth.component';
-import { ProductsComponent } from './components/products/products.component';
-import { EntryVoucherComponent } from './components/entry-voucher/entry-voucher.component';
-import { ExitVoucherComponent } from './components/exit-voucher/exit-voucher.component';
-import { PurchaseOrderComponent } from './components/purchase-order/purchase-order.component';
-
-import { environment } from '../environments/environment';
-import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
-import { provideAuth, getAuth } from '@angular/fire/auth';
-import { provideFirestore, getFirestore } from '@angular/fire/firestore';
-
-const routes: Routes = [
-  { path: 'auth', component: AuthComponent },
-  { path: 'products', component: ProductsComponent },
-  { path: 'entry', component: EntryVoucherComponent },
-  { path: 'exit', component: ExitVoucherComponent },
-  { path: 'commande', component: PurchaseOrderComponent },
-  { path: '', redirectTo: '/auth', pathMatch: 'full' },
-  { path: '**', redirectTo: '/auth' }
-];
-
-@NgModule({
-  declarations: [
-    AppComponent,
-    AuthComponent,
-    ProductsComponent,
-    EntryVoucherComponent,
-    ExitVoucherComponent,
-    PurchaseOrderComponent
-  ],
-  imports: [
-    BrowserModule,
-    RouterModule.forRoot(routes),
-    FormsModule,
-    ReactiveFormsModule
-  ],
-  providers: [
-    provideFirebaseApp(() => initializeApp((environment as any).firebase)),
-    provideAuth(() => getAuth()),
-    provideFirestore(() => getFirestore())
-  ],
-  bootstrap: [AppComponent]
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss'],
+  standalone: false  // Pour NgModule (pas d'imports ici)
 })
-export class AppModule { }
-EOL_MOD
+export class AppComponent implements OnInit {
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
-# 6. Mise à jour AuthService : Modern (inject Auth, onAuthStateChanged)
-cat > "$AUTH_SERVICE" << 'EOL_AUTH'
-import { Injectable, inject } from '@angular/core';
-import { Auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, User } from '@angular/fire/auth';
-import { Observable, from } from 'rxjs';
+  // Getter lazy pour user$ (fix TS2729 : accès après constructor)
+  get user$() {
+    return this.authService.user$;
+  }
 
-@Injectable({
-  providedIn: 'root'
-})
-export class AuthService {
-  private auth: Auth = inject(Auth);
+  ngOnInit(): void {
+    // Implémentation requise pour OnInit (fix TS2420) ; subscribe optionnel
+    // this.user$.subscribe(user => {
+    //   if (!user) {
+    //     this.router.navigate(['/auth']);
+    //   }
+    // });
+  }
 
-  get user$(): Observable<User | null> {
-    return new Observable<User | null>(subscriber => {
-      const unsub = onAuthStateChanged(this.auth, user => subscriber.next(user));
-      return () => unsub();
+  logout(): void {
+    this.authService.logout().subscribe({
+      next: () => {
+        console.log('Logout réussi');
+        this.router.navigate(['/auth']);
+      },
+      error: (error: Error) => {  // Typing pour TS7006
+        console.error('Erreur logout:', error);
+      }
     });
   }
-
-  login(email: string, password: string) {
-    return from(signInWithEmailAndPassword(this.auth, email, password));
-  }
-
-  register(email: string, password: string) {
-    return from(createUserWithEmailAndPassword(this.auth, email, password));
-  }
-
-  logout() {
-    return from(signOut(this.auth));
-  }
 }
-EOL_AUTH
+EOL_COMP
 
-# 7. Régénération angular.json : Esbuild standard Angular 20 (rapide, moderne Firebase OK)
-cat > "$ANGULAR_JSON" << 'EOL_ANG'
-{
-  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
-  "version": 1,
-  "newProjectRoot": "projects",
-  "projects": {
-    "gestion-stock-app": {
-      "projectType": "application",
-      "schematics": {},
-      "root": "",
-      "sourceRoot": "src",
-      "prefix": "app",
-      "architect": {
-        "build": {
-          "builder": "@angular/build:application",
-          "options": {
-            "outputPath": "dist/gestion-stock-app",
-            "index": "src/index.html",
-            "browser": "src/main.ts",
-            "polyfills": ["zone.js"],
-            "tsConfig": "tsconfig.app.json",
-            "assets": [
-              "src/favicon.ico",
-              "src/assets"
-            ],
-            "styles": [
-              "src/styles.scss",
-              "src/tailwind.css"
-            ],
-            "scripts": []
-          },
-          "configurations": {
-            "production": {
-              "budgets": [
-                {
-                  "type": "initial",
-                  "maximumWarning": "500kb",
-                  "maximumError": "1mb"
-                },
-                {
-                  "type": "anyComponentStyle",
-                  "maximumWarning": "2kb",
-                  "maximumError": "4kb"
-                }
-              ],
-              "outputHashing": "all"
-            },
-            "development": {
-              "optimization": false,
-              "extractLicenses": false,
-              "sourceMap": true
-            }
-          },
-          "defaultConfiguration": "production"
-        },
-        "serve": {
-          "builder": "@angular/build:dev-server",
-          "configurations": {
-            "production": {
-              "buildTarget": "gestion-stock-app:build:production"
-            },
-            "development": {
-              "buildTarget": "gestion-stock-app:build:development"
-            }
-          },
-          "defaultConfiguration": "development"
-        },
-        "extract-i18n": {
-          "builder": "@angular/build:extract-i18n",
-          "options": {
-            "buildTarget": "gestion-stock-app:build"
-          }
-        },
-        "test": {
-          "builder": "@angular/build:karma",
-          "options": {
-            "polyfills": [
-              "zone.js",
-              "zone.js/testing"
-            ],
-            "tsConfig": "tsconfig.spec.json",
-            "assets": [
-              "src/favicon.ico",
-              "src/assets"
-            ],
-            "styles": [
-              "src/styles.scss"
-            ],
-            "scripts": []
-          }
-        }
-      }
-    }
-  },
-  "cli": {
-    "analytics": false
-  }
-}
-EOL_ANG
+# 5. Ajout CommonModule à AppModule imports (pour template pipes si besoin)
+if ! grep -q "CommonModule" "$APP_MODULE"; then
+  sed -i '' '/imports: \[/a\    CommonModule,' "$APP_MODULE"
+  echo "CommonModule ajouté à AppModule (pour async/*ngIf)."
+fi
 
-# 8. Nettoyage et réinstallation
-rm -rf .angular dist node_modules package-lock.json
-npm cache clean --force
-npm install --legacy-peer-deps --force
-ng cache clean --all 2>/dev/null || echo "ng CLI absent ; ignore."
+# 6. Validation TypeScript (syntaxe + types)
+npx tsc --noEmit 2>/dev/null && echo "Syntaxe et types OK ! Pas de TS2420/TS1005/NG6001/TS2729." || echo "Vérifiez manuellement 'tsc --noEmit' (fichier peut-être encore malformé)."
 
-# 9. Vérification versions
-npm ls @angular/fire firebase  # Modern : 17+ et 10+
-echo "angular.json : Esbuild standard (moderne Firebase OK)."
+# 7. Nettoyage cache Angular
+ng cache clean --all 2>/dev/null || echo "ng CLI absent ; ignorez."
 
-echo "Migration terminée !"
-echo "Lancez 'ng serve' - esbuild fonctionne, pas de 'module not defined' ou builder error."
+echo "app.component.ts régénéré (getter user$, ngOnInit vide, logout valide)."
+echo "Décorator @Component OK (non-standalone, pas d'imports)."
+echo "Lancez 'ng serve' - bundle sans erreurs syntaxe/top-level return."

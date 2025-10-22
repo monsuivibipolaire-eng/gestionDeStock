@@ -1,0 +1,28 @@
+import { Component } from '@angular/core';
+import { FirebaseError } from "@angular/fire/auth";import { Router } from '@angular/router';
+import { AuthService } from './services/auth.service';
+
+@Component({
+  selector: 'app-root',
+  standalone: false,
+  templateUrl: './app.component.html',
+  styleUrls: []
+})
+export class AppComponent {
+  title = 'gestion-stock-app';
+
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
+
+  logout() {
+    this.authService.logout().then(() => {
+      this.router.navigate(['/auth']);
+        },
+      error: (error: FirebaseError) => {
+      console.error('Erreur de déconnexion:', error);
+        }
+    });
+  }
+}

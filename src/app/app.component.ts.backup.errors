@@ -1,0 +1,42 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { AuthService } from './services/auth.service';
+
+@Component({
+  selector: 'app-root',
+  standalone: false,
+  imports: [CommonModule],  // Ajoutez à NgModule si non-standalone
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent implements OnInit {
+  user$ = this.authService.user$;  // Pour async pipe en template
+
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
+
+  ngOnInit() {
+    // Listen user$ pour auto-redirect si déconnecté (optionnel)
+    this.user$.subscribe(user => {
+      if (!user) {
+        this.router.navigate(['/auth']);
+      }
+    });
+  }
+
+  logout() {
+    this.authService.logout().subscribe({
+      next: () => {
+        console.log('Logout réussi');
+        this.router.navigate(['/auth']);  // Redirection après succès
+      },
+      error: (error: Error) => {  // Typing Error (global) ; résout TS7006
+        console.error('Erreur logout:', error);
+        // E.g., alert('Erreur déconnexion') ou toast
+      }
+    });
+  }
+}
