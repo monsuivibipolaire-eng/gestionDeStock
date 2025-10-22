@@ -1,1 +1,10 @@
-<p>app works!</p>
+<nav class="bg-blue-600 p-4 text-white">
+  <ul class="flex space-x-4">
+    <li><a routerLink="/products" class="hover:underline">Produits</a></li>
+    <li><a routerLink="/entry" class="hover:underline">Bons Entrée</a></li>
+    <li><a routerLink="/exit" class="hover:underline">Bons Sortie</a></li>
+    <li><a routerLink="/commande" class="hover:underline">Bons Commande</a></li>
+    <li><a (click)="logout()" class="hover:underline">Déconnexion</a></li>
+  </ul>
+</nav>
+<router-outlet></router-outlet>
