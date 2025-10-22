@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { FormsModule } from '@angular/forms';
-import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
+import { FormBuilder, FormGroup,  ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormsModule } from '@angular/forms';import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -17,15 +16,13 @@ import { ProductsService } from '../../services/products.service';
 })
 export class ProductsComponent implements OnInit {
   products$!: Observable<Product[]>;
-  filteredProducts$!: Observable<Product[]>;
   productForm: FormGroup;
   isLoading = false;
   isEditing = false;
   editingId: string | null = null;
   errorMessage = '';
-  searchTerm = '';
-  searchTerm$ = new BehaviorSubject<string>('');
-  showForm = false;
+  searchTerm = '';  // Recherche par nom/description
+  showForm = false;  // Toggle form modal/inline
 
   constructor(
     private productsService: ProductsService,
@@ -42,24 +39,20 @@ export class ProductsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadProducts();
-    this.filteredProducts$ = combineLatest([
-      this.products$,
-      this.searchTerm$
-    ]).pipe(
-      map(([products, term]) => products.filter(p =>
-        p.name.toLowerCase().includes(term.toLowerCase()) ||
-        (p.description || '').toLowerCase().includes(term.toLowerCase())
-      ))
-    );
   }
 
   loadProducts(): void {
     this.products$ = this.productsService.getProducts();
   }
 
-  onSearchChange(term: string): void {
-    this.searchTerm = term;
-    this.searchTerm$.next(term);
+  // Filtre produits par recherche (nom ou description ; case-insensitive)
+  get filteredProducts$(): Observable<Product[]> {
+    return this.products$.pipe(
+      map(products => products.filter(p =>
+        p.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        (p.description || '').toLowerCase().includes(this.searchTerm.toLowerCase())
+      ))
+    );
   }
 
   onSubmit(): void {
@@ -72,6 +65,7 @@ export class ProductsComponent implements OnInit {
     const formValue = this.productForm.value;
     
     if (this.isEditing && this.editingId) {
+      // Modification
       this.productsService.updateProduct(this.editingId, formValue).then(() => {
         this.resetForm();
         this.loadProducts();
@@ -80,6 +74,7 @@ export class ProductsComponent implements OnInit {
         console.error('Update error:', err);
       }).finally(() => this.isLoading = false);
     } else {
+      // Ajout
       this.productsService.addProduct(formValue).then(() => {
         this.resetForm();
         this.loadProducts();
@@ -95,7 +90,7 @@ export class ProductsComponent implements OnInit {
     this.editingId = product.id || null;
     this.productForm.patchValue(product);
     this.showForm = true;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });  // Scroll to form
   }
 
   deleteProduct(id: string, name: string): void {

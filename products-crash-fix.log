@@ -1,0 +1,28 @@
+Wed Oct 22 14:21:33 CET 2025: Fix plantage /products (Query + Component + Routing)...
+BACKUP: src/app/services/products.service.ts
+BACKUP: src/app/components/products/products.component.ts
+FIXED: src/app/services/products.service.ts (query wrapper ; fix FirebaseError _Query/_CollectionReference)
+FIXED: src/app/components/products/products.component.ts (filteredProducts$ Observable pur ; BehaviorSubject searchTerm ; no crash change detection)
+FIXED: src/app/components/products/products.component.html (ngModelChange pour searchTerm$ update)
+Validation...
+TS OK!
+❯ Building...
+✔ Building...
+Initial chunk files | Names         |  Raw size
+main.js             | main          |   2.45 MB | 
+chunk-45CPPD7L.js   | -             | 436.28 kB | 
+polyfills.js        | polyfills     |  89.77 kB | 
+styles.css          | styles        |  46.23 kB | 
+
+                    | Initial total |   3.03 MB
+
+Lazy chunk files    | Names         |  Raw size
+chunk-APUO7BVX.js   | index-esm     |  73 bytes | 
+
+Application bundle generation complete. [5.375 seconds] - 2025-10-22T13:21:42.513Z
+
+Output location: /Users/salemkammoun/Documents/majdi/gestion-stock-app/dist/gestion-stock-app
+
+BUILD OK!
+Test runtime : ng serve → /products (devrait charger sans crash)
+Fix crash terminé ! Logs: products-crash-fix.log
