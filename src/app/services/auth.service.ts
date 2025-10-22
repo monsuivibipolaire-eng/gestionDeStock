@@ -1,27 +1,29 @@
-import { Injectable } from '@angular/core';
-import { AngularFireAuth } from '@angular/fire/compat/auth';
-import { Observable } from 'rxjs';
-import firebase from 'firebase/compat/app';
+import { Injectable, inject } from '@angular/core';
+import { Auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, User } from '@angular/fire/auth';
+import { Observable, from } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  user$: Observable<any>;  // Any temporaire pour RxJS types ; remplacez par firebase.User | null après
+  private auth: Auth = inject(Auth);
 
-  constructor(private afAuth: AngularFireAuth) {
-    this.user$ = this.afAuth.authState as Observable<any>;  // Cast pour compat
+  get user$(): Observable<User | null> {
+    return new Observable<User | null>(subscriber => {
+      const unsub = onAuthStateChanged(this.auth, user => subscriber.next(user));
+      return () => unsub();
+    });
   }
 
   login(email: string, password: string) {
-    return this.afAuth.signInWithEmailAndPassword(email, password);
+    return from(signInWithEmailAndPassword(this.auth, email, password));
   }
 
   register(email: string, password: string) {
-    return this.afAuth.createUserWithEmailAndPassword(email, password);
+    return from(createUserWithEmailAndPassword(this.auth, email, password));
   }
 
   logout() {
-    return this.afAuth.signOut();
+    return from(signOut(this.auth));
   }
 }
