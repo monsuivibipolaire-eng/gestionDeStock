@@ -1,9 +1,9 @@
 <div class="flex h-screen bg-gray-100">
-  <!-- Sidebar -->
+  <!-- Sidebar (Desktop) / Mobile Drawer -->
   <aside [class.translate-x-0]="isSidebarOpen" [class.-translate-x-full]="!isSidebarOpen"
-         class="fixed md:relative md:translate-x-0 z-30 w-64 h-full bg-gradient-to-b from-blue-600 to-blue-800 text-white shadow-2xl transform transition-transform duration-300">
+         class="fixed md:relative md:translate-x-0 z-30 w-64 h-full bg-gradient-to-b from-blue-600 to-blue-800 text-white shadow-2xl transform transition-transform duration-300 ease-in-out">
     
-    <!-- Logo -->
+    <!-- Logo / Titre App -->
     <div class="p-6 border-b border-blue-500">
       <h1 class="text-2xl font-bold flex items-center space-x-2">
         <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
@@ -13,10 +13,11 @@
       </h1>
     </div>
 
-    <!-- Navigation -->
+    <!-- Navigation Menu avec Icônes -->
     <nav class="mt-6 px-4">
       <a routerLink="/products" routerLinkActive="bg-blue-900 border-l-4 border-white"
          class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition duration-200 mb-2">
+        <!-- Icône Produits (Box) -->
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
         </svg>
@@ -25,6 +26,7 @@
 
       <a routerLink="/entry-voucher" routerLinkActive="bg-blue-900 border-l-4 border-white"
          class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition duration-200 mb-2">
+        <!-- Icône Entrée (Download) -->
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
         </svg>
@@ -33,6 +35,7 @@
 
       <a routerLink="/exit-voucher" routerLinkActive="bg-blue-900 border-l-4 border-white"
          class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition duration-200 mb-2">
+        <!-- Icône Sortie (Upload) -->
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
         </svg>
@@ -41,60 +44,59 @@
 
       <a routerLink="/purchase-order" routerLinkActive="bg-blue-900 border-l-4 border-white"
          class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition duration-200 mb-2">
+        <!-- Icône Commande (Clipboard List) -->
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
         </svg>
         <span class="font-medium">Commandes</span>
       </a>
 
-      <!-- Bouton Connexion/Déconnexion Dynamique -->
-      <a *ngIf="!currentUser" routerLink="/auth" routerLinkActive="bg-blue-900 border-l-4 border-white"
+      <a routerLink="/auth" routerLinkActive="bg-blue-900 border-l-4 border-white"
          class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition duration-200 mb-2">
+        <!-- Icône Auth (Key) -->
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
         </svg>
         <span class="font-medium">Connexion</span>
       </a>
-
-      <button *ngIf="currentUser" (click)="logout()" 
-              class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-red-600 transition duration-200 mb-2 text-left">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-        </svg>
-        <span class="font-medium">Déconnexion</span>
-      </button>
     </nav>
 
-    <!-- Footer User Info (Si connecté) -->
-    <div *ngIf="currentUser" class="absolute bottom-0 w-full p-4 border-t border-blue-500">
+    <!-- Footer Sidebar (User Info ou Logout - optionnel) -->
+    <div class="absolute bottom-0 w-full p-4 border-t border-blue-500">
       <div class="flex items-center space-x-3">
         <div class="w-10 h-10 rounded-full bg-blue-400 flex items-center justify-center">
-          <span class="text-sm font-bold">{{ getUserInitial() }}</span>
+          <span class="text-sm font-bold">U</span>
         </div>
-        <div class="flex-1 overflow-hidden">
-          <p class="text-sm font-medium truncate">{{ currentUser.email }}</p>
+        <div class="flex-1">
+          <p class="text-sm font-medium">Utilisateur</p>
           <p class="text-xs text-blue-200">Admin</p>
         </div>
       </div>
     </div>
   </aside>
 
-  <!-- Main Content -->
+  <!-- Main Content Area -->
   <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Navbar (Mobile Toggle + Title) -->
     <header class="bg-white shadow-md p-4 flex items-center justify-between md:justify-end">
+      <!-- Hamburger Button (Mobile Only) -->
       <button (click)="toggleSidebar()" class="md:hidden text-gray-700 focus:outline-none">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path *ngIf="!isSidebarOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
           <path *ngIf="isSidebarOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
         </svg>
       </button>
+
+      <!-- Page Title / Breadcrumb (Optionnel) -->
       <h2 class="text-xl font-semibold text-gray-800 hidden md:block">Tableau de Bord</h2>
     </header>
 
+    <!-- Router Outlet (Page Content) -->
     <main class="flex-1 overflow-y-auto bg-gray-50 p-6">
       <router-outlet></router-outlet>
     </main>
   </div>
 </div>
 
+<!-- Overlay Mobile (Click pour fermer sidebar) -->
 <div *ngIf="isSidebarOpen" (click)="toggleSidebar()" class="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"></div>

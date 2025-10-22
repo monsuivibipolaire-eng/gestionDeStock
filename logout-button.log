@@ -1,0 +1,5 @@
+Wed Oct 22 14:50:44 CET 2025: Ajout bouton Déconnexion dynamique...
+UPDATED: src/app/app.component.html (Bouton Connexion/Déconnexion dynamique + user footer)
+UPDATED: src/app/app.component.ts (currentUser Observable + logout method + getUserInitial)
+TS OK!
+BUILD OK!

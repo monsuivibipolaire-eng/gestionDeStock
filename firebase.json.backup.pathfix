@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "public": "dist/gestion-stock-app/browser",
+    "public": "dist/gestion-stock-app",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -19,6 +19,15 @@
           {
             "key": "Cache-Control",
             "value": "max-age=31536000"
+          }
+        ]
+      },
+      {
+        "source": "**/*.@(html|json)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
           }
         ]
       }

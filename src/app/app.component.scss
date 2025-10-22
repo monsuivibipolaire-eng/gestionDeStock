@@ -1,8 +1,37 @@
-/* Styles pour AppComponent */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1rem;
+// Styles globaux pour sidebar Tailwind (animations smooth)
+aside {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Tailwind ou custom CSS ici */
+// Active route highlight (border-left animation)
+a[routerLinkActive] {
+  position: relative;
+}
+
+// Scrollbar custom (optionnel, pour main content)
+main::-webkit-scrollbar {
+  width: 8px;
+}
+
+main::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+main::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+main::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+// Mobile overlay fade-in
+.bg-opacity-50 {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 0.5; }
+}

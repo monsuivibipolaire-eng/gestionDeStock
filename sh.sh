@@ -1,97 +1,139 @@
 #!/bin/bash
 
-# Script universel pour corriger NG6008 : Move TOUS standalone components de declarations vers imports
-# Usage: ./fix-all-ng6008-standalone.sh
-# Logs: ng6008-all-fix.log ; Backup: app.module.ts.backup.ng6008all
+# Script pour corriger outputPath Firebase Hosting (détecte /browser auto) + re-deploy
+# Usage: ./fix-firebase-path.sh
+# Fix: index.html non trouvé dans dist/gestion-stock-app (Angular 17+ /browser)
 
-APP_MODULE="src/app/app.module.ts"
-LOG_FILE="ng6008-all-fix.log"
+LOG_FILE="firebase-path-fix.log"
+FIREBASE_JSON="firebase.json"
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+log_info() {
+    echo -e "${GREEN}[INFO]${NC} $1" | tee -a "$LOG_FILE"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1" | tee -a "$LOG_FILE"
+}
 
 > "$LOG_FILE"
-echo "$(date): Fix NG6008 ALL standalone components (declarations → imports)..." | tee -a "$LOG_FILE"
+log_info "$(date): Détection chemin correct dist..."
 
-# Backup
-if [ -f "$APP_MODULE" ]; then
-  cp "$APP_MODULE" "${APP_MODULE}.backup.ng6008all"
-  echo "BACKUP: $APP_MODULE" | tee -a "$LOG_FILE"
+# 1. Détection outputPath Angular
+if [ -f "angular.json" ]; then
+    BASE_OUTPUT=$(grep -A10 '"build":' angular.json | grep '"outputPath"' | sed 's/.*: *"\(.*\)".*/\1/' | head -1)
+    log_info "outputPath angular.json : $BASE_OUTPUT"
+else
+    log_error "angular.json non trouvé"
+    exit 1
 fi
 
-# Liste des composants standalone connus (ajoutez si nouveaux)
-STANDALONE_COMPONENTS=(
-  "PurchaseOrderComponent"
-  "ExitVoucherComponent"
-  "EntryVoucherComponent"
-  "ProductsComponent"
-  "AuthComponent"
+# 2. Cherche index.html dans les chemins possibles
+POSSIBLE_PATHS=(
+    "$BASE_OUTPUT/browser"
+    "$BASE_OUTPUT"
+    "dist/gestion-stock-app/browser"
+    "dist/gestion-stock-app"
 )
 
-# Fix : Remove de declarations, add à imports
-if [ -f "$APP_MODULE" ]; then
-  # Supprime tous standalone components de declarations: []
-  for component in "${STANDALONE_COMPONENTS[@]}"; do
-    sed -i '' "/declarations: \[/,/\]/ s/${component},\{0,1\}//g" "$APP_MODULE"
-    echo "REMOVED: $component de declarations" | tee -a "$LOG_FILE"
-  done
-  
-  # Nettoie virgules traînantes en declarations
-  sed -i '' '/declarations: \[/,/\]/ s/,,/,/g' "$APP_MODULE"
-  sed -i '' '/declarations: \[/,/\]/ s/\[,/\[/g' "$APP_MODULE"
-  sed -i '' '/declarations: \[/,/\]/ s/,\]/\]/g' "$APP_MODULE"
-  sed -i '' '/declarations: \[/,/\]/ s/\[ \]/\[AppComponent\]/g' "$APP_MODULE"  # Garde AppComponent si vide
-  
-  # Ajoute standalone components à imports: [] (après provideFirestore ou RouterModule)
-  if grep -q "provideFirestore" "$APP_MODULE"; then
-    TARGET_LINE="provideFirestore"
-  elif grep -q "RouterModule.forRoot" "$APP_MODULE"; then
-    TARGET_LINE="RouterModule.forRoot"
-  else
-    TARGET_LINE="imports: \["
-  fi
-  
-  # Check si déjà présents en imports (évite doublons)
-  for component in "${STANDALONE_COMPONENTS[@]}"; do
-    if ! grep -q "imports:.*$component" "$APP_MODULE" && ! grep -A20 "imports: \[" "$APP_MODULE" | grep -q "$component"; then
-      sed -i '' "/$TARGET_LINE/a\\
-    $component," "$APP_MODULE"
-      echo "ADDED: $component à imports: []" | tee -a "$LOG_FILE"
-    else
-      echo "SKIPPED: $component déjà en imports" | tee -a "$LOG_FILE"
+CORRECT_PATH=""
+for path in "${POSSIBLE_PATHS[@]}"; do
+    if [ -f "$path/index.html" ]; then
+        CORRECT_PATH="$path"
+        log_info "✅ index.html trouvé dans : $CORRECT_PATH"
+        break
     fi
-  done
-  
-  # Assure import statements en haut du fichier (si absents)
-  COMPONENT_PATHS=(
-    "PurchaseOrderComponent:./components/purchase-order/purchase-order.component"
-    "ExitVoucherComponent:./components/exit-voucher/exit-voucher.component"
-    "EntryVoucherComponent:./components/entry-voucher/entry-voucher.component"
-    "ProductsComponent:./components/products/products.component"
-    "AuthComponent:./components/auth/auth.component"
-  )
-  
-  for item in "${COMPONENT_PATHS[@]}"; do
-    component="${item%%:*}"
-    path="${item##*:}"
-    if ! grep -q "import.*$component" "$APP_MODULE"; then
-      sed -i '' "/import { NgModule }/a\\
-import { $component } from '$path';" "$APP_MODULE"
-      echo "ADDED: import { $component }" | tee -a "$LOG_FILE"
-    fi
-  done
+done
+
+if [ -z "$CORRECT_PATH" ]; then
+    log_error "index.html non trouvé dans aucun dossier dist"
+    log_info "Chemins testés :"
+    for path in "${POSSIBLE_PATHS[@]}"; do
+        echo "  - $path ($([ -d "$path" ] && echo "existe mais vide" || echo "n'existe pas"))"
+    done
+    log_info "Lancez d'abord : ng build --configuration production"
+    exit 1
 fi
 
-# Validation
-if command -v ng &> /dev/null; then
-  ng cache clean
-  echo "Validation..." | tee -a "$LOG_FILE"
-  npx tsc --noEmit 2>&1 | tee -a "$LOG_FILE" && echo "TS OK!" | tee -a "$LOG_FILE"
-  ng build --configuration development 2>&1 | tee -a "$LOG_FILE" && echo "BUILD OK (no NG6008)!" | tee -a "$LOG_FILE" || {
-    echo "Build échoué ; vérifiez errors:" | tee -a "$LOG_FILE"
-    ng build --configuration development --verbose 2>&1 | grep -E "NG6008|ERROR" | tee -a "$LOG_FILE"
+# 3. Liste contenu dossier correct (debug)
+log_info "Contenu de $CORRECT_PATH :"
+ls -lh "$CORRECT_PATH" | head -10 | tee -a "$LOG_FILE"
+
+# 4. Backup et mise à jour firebase.json
+if [ -f "$FIREBASE_JSON" ]; then
+    cp "$FIREBASE_JSON" "${FIREBASE_JSON}.backup.pathfix"
+    log_info "Backup : ${FIREBASE_JSON}.backup.pathfix"
+fi
+
+cat > "$FIREBASE_JSON" << EOF
+{
+  "hosting": {
+    "public": "$CORRECT_PATH",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(jpg|jpeg|gif|png|svg|webp|js|css|woff|woff2|ttf|eot)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=31536000"
+          }
+        ]
+      }
+    ]
   }
+}
+EOF
+log_info "✅ firebase.json mis à jour (public: $CORRECT_PATH)"
+
+# 5. Vérification finale
+if grep -q "\"public\": \"$CORRECT_PATH\"" "$FIREBASE_JSON"; then
+    log_info "✅ firebase.json valide"
+else
+    log_error "firebase.json invalide après mise à jour"
+    exit 1
 fi
 
-echo "Fix NG6008 ALL terminé ! Logs: $LOG_FILE" | tee -a "$LOG_FILE"
-echo "Test: ng serve → /purchase-order, /exit-voucher, /entry-voucher, /products, /auth (toutes routes OK)"
-echo "Vérifiez: grep -A10 'declarations:' src/app/app.module.ts (doit avoir seulement AppComponent)"
-echo "Vérifiez: grep -A25 'imports:' src/app/app.module.ts (doit inclure tous 5 standalone components)"
-echo "Revert: cp ${APP_MODULE}.backup.ng6008all $APP_MODULE"
+# 6. Re-deploy Firebase Hosting
+log_info "Re-deploy Firebase Hosting..."
+if command -v firebase &> /dev/null; then
+    firebase deploy --only hosting 2>&1 | tee -a "$LOG_FILE"
+    
+    if [ $? -eq 0 ]; then
+        echo ""
+        log_info "✅ DEPLOY SUCCESS !"
+        
+        # Récupère Project ID pour afficher URL
+        if [ -f ".firebaserc" ]; then
+            PROJECT_ID=$(grep -o '"default": *"[^"]*"' .firebaserc | sed 's/.*: *"\(.*\)".*/\1/')
+            echo "=========================================="
+            echo "  🚀 App déployée avec succès !"
+            echo "=========================================="
+            echo "URL : https://$PROJECT_ID.web.app"
+            echo "      https://$PROJECT_ID.firebaseapp.com"
+            echo ""
+        fi
+    else
+        log_error "Deploy échoué"
+        exit 1
+    fi
+else
+    log_error "firebase CLI non installé : npm i -g firebase-tools"
+    exit 1
+fi
+
+log_info "Logs : $LOG_FILE"
