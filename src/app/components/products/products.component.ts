@@ -2,13 +2,16 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { Router } from '@angular/router';
-import { Product } from "../../models/product";import { ProductsService } from '../../services/products.service';
+import { CommonModule } from '@angular/common';  // Ajouté pour *ngIf/*ngFor dans template
+import { Product } from "../../models/product";  // Espace corrigé après import
+import { ProductsService } from '../../services/products.service';
 
 @Component({
-  imports: [ReactiveFormsModule],
-  standalone: true,  selector: 'app-products',
+  selector: 'app-products',
   templateUrl: './products.component.html',
-  styleUrls: ['./products.component.scss']
+  styleUrls: ['./products.component.scss'],
+  imports: [ReactiveFormsModule, CommonModule],  // Array corrigé (imports standalone pour forms + directives ; ReactiveFormsModule pour FormGroup, CommonModule pour *ngIf/*ngFor)
+  standalone: true  // Propriétés réorganisées (pas de CommonModule, en dehors de l'array)
 })
 export class ProductsComponent implements OnInit {
   products$!: Observable<Product[]>;

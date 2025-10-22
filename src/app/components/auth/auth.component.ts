@@ -1,15 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';  // Ajouté pour *ngIf dans template (errorMessage, isLoading, showRegister)
 import { AuthService } from "../../services/auth.service";
 import { User } from '@angular/fire/auth';
 import { UserCredential } from '@angular/fire/auth';
 
 @Component({
-  imports: [ReactiveFormsModule],
-  standalone: true,  selector: 'app-auth',
+  selector: 'app-auth',
   templateUrl: './auth.component.html',
-  styleUrls: ['./auth.component.scss']
+  styleUrls: ['./auth.component.scss'],
+  imports: [ReactiveFormsModule, CommonModule],  // Array corrigé (imports standalone pour forms + directives)
+  standalone: true  // Propriétés réorganisées (pas de CommonModule extra en dehors de l'array)
 })
 export class AuthComponent implements OnInit {
   loginForm: FormGroup;
@@ -34,8 +36,8 @@ export class AuthComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {  // Fix TS2420 : Implements OnInit correctement
-    this.authService.user$.subscribe((user: User | null) => {  // Fix TS7006 : Type user (no implicit any) ; subscribe sur Observable
+  ngOnInit(): void {
+    this.authService.user$.subscribe((user: User | null) => {
       this.user = user;
       if (user) {
         this.router.navigate(['/products']);  // Redirect si logged
@@ -43,24 +45,24 @@ export class AuthComponent implements OnInit {
     });
   }
 
-  onLogin(): void {  // Fix TS2304/TS1005 : Method propre
+  onLogin(): void {
     if (this.loginForm.invalid) {
-      this.errorMessage = 'Veuillez remplir les champs correctement.';  // Multilingual ready
+      this.errorMessage = 'Veuillez remplir les champs correctement.';
       return;
     }
     this.isLoading = true;
     const { email, password } = this.loginForm.value;
-    this.authService.login(email, password).then((response: UserCredential) => {  // Fix TS2552 : UserCredential importé ; .then sur Promise
-      console.log('Logged in:', response.user?.uid);  // Fix TS2304 : Quotes "Logged in:" + ?. safe
+    this.authService.login(email, password).then((response: UserCredential) => {
+      console.log('Logged in:', response.user?.uid);
       this.errorMessage = '';
       this.router.navigate(['/products']);  // Success redirect
-    }).catch((error: any) => {  // Fix TS1005/TS2695 : .catch propre (no next/error syntax)
-      console.error('Login error:', error);  // Fix quotes/TS2304
+    }).catch((error: any) => {
+      console.error('Login error:', error);
       this.errorMessage = error.message;
     }).finally(() => this.isLoading = false);
   }
 
-  onRegister(): void {  // Fix TS2304/TS1005/TS2554 : Method propre (similaire login)
+  onRegister(): void {
     if (this.registerForm.invalid) {
       this.errorMessage = 'Veuillez remplir les champs pour l\'inscription.';
       return;

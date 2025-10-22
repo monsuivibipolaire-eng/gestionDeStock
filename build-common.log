@@ -1,0 +1,708 @@
+❯ Building...
+
+  polyfills.js       87.7kb
+  polyfills.js.map  188.5kb
+
+⚡ Done in 143ms
+✘ [ERROR] TS2769: No overload matches this call.
+  Overload 1 of 3, '(options: FirebaseOptions, name?: string | undefined): FirebaseApp', gave the following error.
+    Object literal may only specify known properties, and 'projectNumber' does not exist in type 'FirebaseOptions'.
+  Overload 2 of 3, '(options: FirebaseOptions, config?: FirebaseAppSettings | undefined): FirebaseApp', gave the following error.
+    Object literal may only specify known properties, and 'projectNumber' does not exist in type 'FirebaseOptions'. [plugin angular-compiler]
+
+    src/app/app.module.ts:47:329:
+      47 │ ...enderId: "243866845719", projectNumber: "243866845719", version...
+         ╵                             ~~~~~~~~~~~~~
+
+▲ [WARNING] NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. [plugin angular-compiler]
+
+    src/app/components/auth/auth.component.html:19:12:
+      19 │       <div *ngIf="loginForm.get('email')?.invalid && loginForm.get...
+         ╵             ~~~~
+
+  Warning occurs in the template of component AuthComponent.
+
+    src/app/components/auth/auth.component.ts:11:15:
+      11 │   templateUrl: './auth.component.html',
+         ╵                ~~~~~~~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. [plugin angular-compiler]
+
+    src/app/components/auth/auth.component.html:37:12:
+      37 │       <div *ngIf="loginForm.get('password')?.invalid && loginForm....
+         ╵             ~~~~
+
+  Warning occurs in the template of component AuthComponent.
+
+    src/app/components/auth/auth.component.ts:11:15:
+      11 │   templateUrl: './auth.component.html',
+         ╵                ~~~~~~~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. [plugin angular-compiler]
+
+    src/app/components/auth/auth.component.html:43:10:
+      43 │     <div *ngIf="errorMessage" class="bg-red-100 border border-red-...
+         ╵           ~~~~
+
+  Warning occurs in the template of component AuthComponent.
+
+    src/app/components/auth/auth.component.ts:11:15:
+      11 │   templateUrl: './auth.component.html',
+         ╵                ~~~~~~~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. [plugin angular-compiler]
+
+    src/app/components/auth/auth.component.html:53:13:
+      53 │       <span *ngIf="isLoading">Connexion en cours...</span>
+         ╵              ~~~~
+
+  Warning occurs in the template of component AuthComponent.
+
+    src/app/components/auth/auth.component.ts:11:15:
+      11 │   templateUrl: './auth.component.html',
+         ╵                ~~~~~~~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. [plugin angular-compiler]
+
+    src/app/components/auth/auth.component.html:54:13:
+      54 │       <span *ngIf="!isLoading">Se connecter</span>
+         ╵              ~~~~
+
+  Warning occurs in the template of component AuthComponent.
+
+    src/app/components/auth/auth.component.ts:11:15:
+      11 │   templateUrl: './auth.component.html',
+         ╵                ~~~~~~~~~~~~~~~~~~~~~~~
+
+✘ [ERROR] TS18004: No value exists in scope for the shorthand property 'CommonModule'. Either declare one or provide an initializer. [plugin angular-compiler]
+
+    src/app/components/auth/auth.component.ts:10:6:
+      10 │       CommonModule,  standalone: true,  selector: 'app-auth',
+         ╵       ~~~~~~~~~~~~
+
+✘ [ERROR] TS2353: Object literal may only specify known properties, and 'CommonModule' does not exist in type 'Component'. [plugin angular-compiler]
+
+    src/app/components/auth/auth.component.ts:10:6:
+      10 │       CommonModule,  standalone: true,  selector: 'app-auth',
+         ╵       ~~~~~~~~~~~~
+
+▲ [WARNING] NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. [plugin angular-compiler]
+
+    src/app/components/products/products.component.html:6:10:
+      6 │     <div *ngIf="errorMessage" class="bg-red-100 border border-red-4...
+        ╵           ~~~~
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+      10 │   templateUrl: './products.component.html',
+         ╵                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. [plugin angular-compiler]
+
+    src/app/components/products/products.component.html:11:8:
+      11 │   <div *ngIf="isLoading" class="text-center py-4">Chargement...</div>
+         ╵         ~~~~
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+      10 │   templateUrl: './products.component.html',
+         ╵                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. [plugin angular-compiler]
+
+    src/app/components/products/products.component.html:13:8:
+      13 │   <div *ngIf="!isLoading" class="overflow-x-auto">
+         ╵         ~~~~
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+      10 │   templateUrl: './products.component.html',
+         ╵                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. [plugin angular-compiler]
+
+    src/app/components/products/products.component.html:24:47:
+      24 │ ...s="divide-y divide-gray-200" *ngIf="products$ | async as produc...
+         ╵                                  ~~~~
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+      10 │   templateUrl: './products.component.html',
+         ╵                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] NG8116: A structural directive `ngIfElse` was used in the template without a corresponding import in the component. Make sure that the directive is included in the `@Component.imports` array of this component. [plugin angular-compiler]
+
+    src/app/components/products/products.component.html:24:84:
+      24 │ ...-200" *ngIf="products$ | async as products; else loadingTemplate">
+         ╵                                                ~~~~
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+      10 │   templateUrl: './products.component.html',
+         ╵                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] NG8103: The `*ngFor` directive was used in the template, but neither the `NgFor` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @for or make sure that either the `NgFor` directive or the `CommonModule` is included in the `@Component.imports` array of this component. [plugin angular-compiler]
+
+    src/app/components/products/products.component.html:25:13:
+      25 │         <tr *ngFor="let product of products" class="hover:bg-gray-...
+         ╵              ~~~~~
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+      10 │   templateUrl: './products.component.html',
+         ╵                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. [plugin angular-compiler]
+
+    src/app/components/products/products.component.html:35:13:
+      35 │         <tr *ngIf="products.length === 0">
+         ╵              ~~~~
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+      10 │   templateUrl: './products.component.html',
+         ╵                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. [plugin angular-compiler]
+
+    src/app/components/products/products.component.html:49:8:
+      49 │   <div *ngIf="productForm.value && (isEditing || true)" class="fix...
+         ╵         ~~~~
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+      10 │   templateUrl: './products.component.html',
+         ╵                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. [plugin angular-compiler]
+
+    src/app/components/products/products.component.html:57:16:
+      57 │           <div *ngIf="productForm.get('name')?.invalid && productF...
+         ╵                 ~~~~
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+      10 │   templateUrl: './products.component.html',
+         ╵                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. [plugin angular-compiler]
+
+    src/app/components/products/products.component.html:63:16:
+      63 │           <div *ngIf="productForm.get('price')?.invalid && product...
+         ╵                 ~~~~
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+      10 │   templateUrl: './products.component.html',
+         ╵                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. [plugin angular-compiler]
+
+    src/app/components/products/products.component.html:69:16:
+      69 │           <div *ngIf="productForm.get('quantity')?.invalid && prod...
+         ╵                 ~~~~
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+      10 │   templateUrl: './products.component.html',
+         ╵                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. [plugin angular-compiler]
+
+    src/app/components/products/products.component.html:80:19:
+      80 │             <span *ngIf="isLoading">Enregistrement...</span>
+         ╵                    ~~~~
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+      10 │   templateUrl: './products.component.html',
+         ╵                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] NG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component. [plugin angular-compiler]
+
+    src/app/components/products/products.component.html:81:19:
+      81 │             <span *ngIf="!isLoading">{{ isEditing ? 'Mettre à jou...
+         ╵                    ~~~~
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+      10 │   templateUrl: './products.component.html',
+         ╵                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+✘ [ERROR] TS18004: No value exists in scope for the shorthand property 'CommonModule'. Either declare one or provide an initializer. [plugin angular-compiler]
+
+    src/app/components/products/products.component.ts:9:6:
+      9 │       CommonModule,  standalone: true,  selector: 'app-products',
+        ╵       ~~~~~~~~~~~~
+
+✘ [ERROR] TS2353: Object literal may only specify known properties, and 'CommonModule' does not exist in type 'Component'. [plugin angular-compiler]
+
+    src/app/components/products/products.component.ts:9:6:
+      9 │       CommonModule,  standalone: true,  selector: 'app-products',
+        ╵       ~~~~~~~~~~~~
+
+● [DEBUG] Top-level "this" will be replaced with undefined since this file is an ECMAScript module [this-is-undefined-in-esm]
+
+    node_modules/@angular/fire/fesm2022/angular-fire.mjs:143:68:
+      143 │ ...njectionContext(injector, () => run(() => it.apply(this, args)));
+          │                                                       ~~~~
+          ╵                                                       undefined
+
+  This file is considered to be an ECMAScript module because of the "export" keyword here:
+
+    node_modules/@angular/fire/fesm2022/angular-fire.mjs:210:0:
+      210 │ export { LogLevel, VERSION, setLogLevel, ɵAngularFireSchedulers,...
+          ╵ ~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:17:6:
+      17 │       "types": "./index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:15:6:
+      15 │       "import": "./index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:16:6:
+      16 │       "require": "./index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:22:6:
+      22 │       "types": "./auth/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:20:6:
+      20 │       "import": "./auth/index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:21:6:
+      21 │       "require": "./auth/index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:27:6:
+      27 │       "types": "./database/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:25:6:
+      25 │       "import": "./database/index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:26:6:
+      26 │       "require": "./database/index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:32:6:
+      32 │       "types": "./firestore/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:30:6:
+      30 │       "import": "./firestore/index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:31:6:
+      31 │       "require": "./firestore/index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:37:6:
+      37 │       "types": "./firestore/lite/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:35:6:
+      35 │       "import": "./firestore/lite/index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:36:6:
+      36 │       "require": "./firestore/lite/index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:42:6:
+      42 │       "types": "./functions/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:40:6:
+      40 │       "import": "./functions/index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:41:6:
+      41 │       "require": "./functions/index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:47:6:
+      47 │       "types": "./performance/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:45:6:
+      45 │       "import": "./performance/index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:46:6:
+      46 │       "require": "./performance/index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:52:6:
+      52 │       "types": "./remote-config/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:50:6:
+      50 │       "import": "./remote-config/index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:51:6:
+      51 │       "require": "./remote-config/index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:57:6:
+      57 │       "types": "./storage/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:55:6:
+      55 │       "import": "./storage/index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:56:6:
+      56 │       "require": "./storage/index.cjs.js",
+         ╵       ~~~~~~~~~
+
+18 warnings and 5 errors
+✔ Building...
+Application bundle generation failed. [3.783 seconds] - 2025-10-22T12:55:14.209Z
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/auth/auth.component.html:19:12:
+[37m      19 │       <div *[32mngIf[37m="loginForm.get('email')?.invalid && loginForm.get...
+         ╵             [32m~~~~[0m
+
+  Warning occurs in the template of component AuthComponent.
+
+    src/app/components/auth/auth.component.ts:11:15:
+[37m      11 │   templateUrl: [32m'./auth.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/auth/auth.component.html:37:12:
+[37m      37 │       <div *[32mngIf[37m="loginForm.get('password')?.invalid && loginForm....
+         ╵             [32m~~~~[0m
+
+  Warning occurs in the template of component AuthComponent.
+
+    src/app/components/auth/auth.component.ts:11:15:
+[37m      11 │   templateUrl: [32m'./auth.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/auth/auth.component.html:43:10:
+[37m      43 │     <div *[32mngIf[37m="errorMessage" class="bg-red-100 border border-red-...
+         ╵           [32m~~~~[0m
+
+  Warning occurs in the template of component AuthComponent.
+
+    src/app/components/auth/auth.component.ts:11:15:
+[37m      11 │   templateUrl: [32m'./auth.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/auth/auth.component.html:53:13:
+[37m      53 │       <span *[32mngIf[37m="isLoading">Connexion en cours...</span>
+         ╵              [32m~~~~[0m
+
+  Warning occurs in the template of component AuthComponent.
+
+    src/app/components/auth/auth.component.ts:11:15:
+[37m      11 │   templateUrl: [32m'./auth.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/auth/auth.component.html:54:13:
+[37m      54 │       <span *[32mngIf[37m="!isLoading">Se connecter</span>
+         ╵              [32m~~~~[0m
+
+  Warning occurs in the template of component AuthComponent.
+
+    src/app/components/auth/auth.component.ts:11:15:
+[37m      11 │   templateUrl: [32m'./auth.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/products/products.component.html:6:10:
+[37m      6 │     <div *[32mngIf[37m="errorMessage" class="bg-red-100 border border-red-4...
+        ╵           [32m~~~~[0m
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+[37m      10 │   templateUrl: [32m'./products.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/products/products.component.html:11:8:
+[37m      11 │   <div *[32mngIf[37m="isLoading" class="text-center py-4">Chargement...</div>
+         ╵         [32m~~~~[0m
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+[37m      10 │   templateUrl: [32m'./products.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/products/products.component.html:13:8:
+[37m      13 │   <div *[32mngIf[37m="!isLoading" class="overflow-x-auto">
+         ╵         [32m~~~~[0m
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+[37m      10 │   templateUrl: [32m'./products.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/products/products.component.html:24:47:
+[37m      24 │ ...s="divide-y divide-gray-200" *[32mngIf[37m="products$ | async as produc...
+         ╵                                  [32m~~~~[0m
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+[37m      10 │   templateUrl: [32m'./products.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8116: A structural directive `ngIfElse` was used in the template without a corresponding import in the component. Make sure that the directive is included in the `@Component.imports` array of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/products/products.component.html:24:84:
+[37m      24 │ ...-200" *ngIf="products$ | async as products; [32melse[37m loadingTemplate">
+         ╵                                                [32m~~~~[0m
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+[37m      10 │   templateUrl: [32m'./products.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: The `*ngFor` directive was used in the template, but neither the `NgFor` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @for or make sure that either the `NgFor` directive or the `CommonModule` is included in the `@Component.imports` array of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/products/products.component.html:25:13:
+[37m      25 │         <tr *[32mngFor[37m="let product of products" class="hover:bg-gray-...
+         ╵              [32m~~~~~[0m
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+[37m      10 │   templateUrl: [32m'./products.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/products/products.component.html:35:13:
+[37m      35 │         <tr *[32mngIf[37m="products.length === 0">
+         ╵              [32m~~~~[0m
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+[37m      10 │   templateUrl: [32m'./products.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/products/products.component.html:49:8:
+[37m      49 │   <div *[32mngIf[37m="productForm.value && (isEditing || true)" class="fix...
+         ╵         [32m~~~~[0m
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+[37m      10 │   templateUrl: [32m'./products.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/products/products.component.html:57:16:
+[37m      57 │           <div *[32mngIf[37m="productForm.get('name')?.invalid && productF...
+         ╵                 [32m~~~~[0m
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+[37m      10 │   templateUrl: [32m'./products.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/products/products.component.html:63:16:
+[37m      63 │           <div *[32mngIf[37m="productForm.get('price')?.invalid && product...
+         ╵                 [32m~~~~[0m
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+[37m      10 │   templateUrl: [32m'./products.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/products/products.component.html:69:16:
+[37m      69 │           <div *[32mngIf[37m="productForm.get('quantity')?.invalid && prod...
+         ╵                 [32m~~~~[0m
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+[37m      10 │   templateUrl: [32m'./products.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/products/products.component.html:80:19:
+[37m      80 │             <span *[32mngIf[37m="isLoading">Enregistrement...</span>
+         ╵                    [32m~~~~[0m
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+[37m      10 │   templateUrl: [32m'./products.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8103: The `*ngIf` directive was used in the template, but neither the `NgIf` directive nor the `CommonModule` was imported. Use Angular's built-in control flow @if or make sure that either the `NgIf` directive or the `CommonModule` is included in the `@Component.imports` array of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/products/products.component.html:81:19:
+[37m      81 │             <span *[32mngIf[37m="!isLoading">{{ isEditing ? 'Mettre à jou...
+         ╵                    [32m~~~~[0m
+
+  Warning occurs in the template of component ProductsComponent.
+
+    src/app/components/products/products.component.ts:10:15:
+[37m      10 │   templateUrl: [32m'./products.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2769: No overload matches this call.
+  Overload 1 of 3, '(options: FirebaseOptions, name?: string | undefined): FirebaseApp', gave the following error.
+    Object literal may only specify known properties, and 'projectNumber' does not exist in type 'FirebaseOptions'.
+  Overload 2 of 3, '(options: FirebaseOptions, config?: FirebaseAppSettings | undefined): FirebaseApp', gave the following error.
+    Object literal may only specify known properties, and 'projectNumber' does not exist in type 'FirebaseOptions'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/app.module.ts:47:329:
+[37m      47 │ ...enderId: "243866845719", [32mprojectNumber[37m: "243866845719", version...
+         ╵                             [32m~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS18004: No value exists in scope for the shorthand property 'CommonModule'. Either declare one or provide an initializer.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/auth/auth.component.ts:10:6:
+[37m      10 │       [32mCommonModule[37m,  standalone: true,  selector: 'app-auth',
+         ╵       [32m~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2353: Object literal may only specify known properties, and 'CommonModule' does not exist in type 'Component'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/auth/auth.component.ts:10:6:
+[37m      10 │       [32mCommonModule[37m,  standalone: true,  selector: 'app-auth',
+         ╵       [32m~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS18004: No value exists in scope for the shorthand property 'CommonModule'. Either declare one or provide an initializer.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/products/products.component.ts:9:6:
+[37m      9 │       [32mCommonModule[37m,  standalone: true,  selector: 'app-products',
+        ╵       [32m~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2353: Object literal may only specify known properties, and 'CommonModule' does not exist in type 'Component'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/products/products.component.ts:9:6:
+[37m      9 │       [32mCommonModule[37m,  standalone: true,  selector: 'app-products',
+        ╵       [32m~~~~~~~~~~~~[0m
+
+

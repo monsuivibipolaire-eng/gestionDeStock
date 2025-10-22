@@ -10,7 +10,7 @@ export class AuthService {
   user$!: Observable<User | null>;
 
   constructor(private auth: Auth) {
-    this.user$ = new Observable(observer => {
+    console.log("Auth injected OK ; no NG0201", this.auth);    this.user$ = new Observable(observer => {
       const unsubscribe = onAuthStateChanged(this.auth, user => observer.next(user));
       return unsubscribe;
     });
