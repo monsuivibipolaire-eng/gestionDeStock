@@ -1,6 +1,7 @@
 import { AngularFireModule } from "@angular/fire/compat";
 import { AngularFirestoreModule } from "@angular/fire/compat/firestore";
 import { environment } from "../environments/environment";
+import { ProductsService } from "./services/products.service";import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule, Routes } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -16,7 +17,6 @@ import { PurchaseOrderComponent } from './components/purchase-order/purchase-ord
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { provideAuth, getAuth } from '@angular/fire/auth';
 import { provideFirestore, getFirestore } from '@angular/fire/firestore';
-import { NgModule } from "@angular/core";
 
 const routes: Routes = [
   { path: 'auth', component: AuthComponent },
@@ -31,21 +31,24 @@ const routes: Routes = [
 @NgModule({
   declarations: [
     AppComponent,
+    AuthComponent,
+    ProductsComponent,
     EntryVoucherComponent,
     ExitVoucherComponent,
     PurchaseOrderComponent
   ],
   imports: [
-      ReactiveFormsModule,      ProductsComponent,      ProductsComponent,      AngularFireModule.initializeApp(environment.firebaseConfig),
-      AngularFirestoreModule,    BrowserModule,
+    BrowserModule,
     RouterModule.forRoot(routes),
     FormsModule,
     ReactiveFormsModule
   ],
-  providers:[
+  providers: [
+      AngularFireModule.initializeApp(environment.firebase),
+      AngularFirestoreModule,    provideFirebaseApp(() => initializeApp((environment as any).firebase)),
+      ProductsService,    provideAuth(() => getAuth()),
     provideFirestore(() => getFirestore())
   ],
-    
   bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -1,18 +1,19 @@
 import { Injectable } from '@angular/core';
 import { Auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, User, UserCredential } from '@angular/fire/auth';
-import { Observable } from 'rxjs';
-import { from } from 'rxjs';
+import { Observable, from } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  user$!: Observable<User | null>;
+  user$!: Observable<User | null>;  // Public (fix TS2341) ; ! non-null post-constructor
 
   constructor(private auth: Auth) {
-    this.user$ = new Observable(observer => {
-      const unsubscribe = onAuthStateChanged(this.auth, user => observer.next(user));
-      return unsubscribe;
+    this.user$ = new Observable<User | null>(observer => {
+      const unsubscribe = onAuthStateChanged(this.auth, (user) => {
+        observer.next(user);
+      });
+      return () => unsubscribe();
     });
   }
 
@@ -21,7 +22,7 @@ export class AuthService {
   }
 
   login(email: string, password: string): Promise<UserCredential> {
-    return this.signIn(email, password);
+    return this.signIn(email, password);  // Alias pour compat (fix TS2339 'login' absent)
   }
 
   register(email: string, password: string): Promise<UserCredential> {
@@ -33,7 +34,7 @@ export class AuthService {
   }
 
   logout$(): Observable<void> {
-    return from(this.logout());
+    return from(this.logout());  // Wrap pour .subscribe (fix TS2339 subscribe sur Promise)
   }
 
   getCurrentUser(): Observable<User | null> {

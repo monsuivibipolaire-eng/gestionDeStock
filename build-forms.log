@@ -1,0 +1,265 @@
+❯ Building...
+
+  polyfills.js       87.7kb
+  polyfills.js.map  188.5kb
+
+⚡ Done in 114ms
+✘ [ERROR] NG1010: 'imports' must be an array of components, directives, pipes, or NgModules.
+  Value could not be determined statically. [plugin angular-compiler]
+
+    src/app/components/auth/auth.component.ts:9:12:
+      9 │   imports: [ReactiveFormsModule],
+        ╵             ~~~~~~~~~~~~~~~~~~~
+
+  Unknown reference.
+
+    src/app/components/auth/auth.component.ts:9:12:
+      9 │   imports: [ReactiveFormsModule],
+        ╵             ~~~~~~~~~~~~~~~~~~~
+
+✘ [ERROR] TS2304: Cannot find name 'ReactiveFormsModule'. [plugin angular-compiler]
+
+    src/app/components/auth/auth.component.ts:9:12:
+      9 │   imports: [ReactiveFormsModule],
+        ╵             ~~~~~~~~~~~~~~~~~~~
+
+✘ [ERROR] NG1010: 'imports' must be an array of components, directives, pipes, or NgModules.
+  Value could not be determined statically. [plugin angular-compiler]
+
+    src/app/components/products/products.component.ts:8:12:
+      8 │   imports: [ReactiveFormsModule],
+        ╵             ~~~~~~~~~~~~~~~~~~~
+
+  Unknown reference.
+
+    src/app/components/products/products.component.ts:8:12:
+      8 │   imports: [ReactiveFormsModule],
+        ╵             ~~~~~~~~~~~~~~~~~~~
+
+✘ [ERROR] TS2304: Cannot find name 'ReactiveFormsModule'. [plugin angular-compiler]
+
+    src/app/components/products/products.component.ts:8:12:
+      8 │   imports: [ReactiveFormsModule],
+        ╵             ~~~~~~~~~~~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:17:6:
+      17 │       "types": "./index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:15:6:
+      15 │       "import": "./index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:16:6:
+      16 │       "require": "./index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:22:6:
+      22 │       "types": "./auth/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:20:6:
+      20 │       "import": "./auth/index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:21:6:
+      21 │       "require": "./auth/index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:27:6:
+      27 │       "types": "./database/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:25:6:
+      25 │       "import": "./database/index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:26:6:
+      26 │       "require": "./database/index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:32:6:
+      32 │       "types": "./firestore/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:30:6:
+      30 │       "import": "./firestore/index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:31:6:
+      31 │       "require": "./firestore/index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:37:6:
+      37 │       "types": "./firestore/lite/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:35:6:
+      35 │       "import": "./firestore/lite/index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:36:6:
+      36 │       "require": "./firestore/lite/index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:42:6:
+      42 │       "types": "./functions/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:40:6:
+      40 │       "import": "./functions/index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:41:6:
+      41 │       "require": "./functions/index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:47:6:
+      47 │       "types": "./performance/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:45:6:
+      45 │       "import": "./performance/index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:46:6:
+      46 │       "require": "./performance/index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:52:6:
+      52 │       "types": "./remote-config/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:50:6:
+      50 │       "import": "./remote-config/index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:51:6:
+      51 │       "require": "./remote-config/index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:57:6:
+      57 │       "types": "./storage/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:55:6:
+      55 │       "import": "./storage/index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:56:6:
+      56 │       "require": "./storage/index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] Top-level "this" will be replaced with undefined since this file is an ECMAScript module [this-is-undefined-in-esm]
+
+    node_modules/@angular/fire/fesm2022/angular-fire.mjs:143:68:
+      143 │ ...njectionContext(injector, () => run(() => it.apply(this, args)));
+          │                                                       ~~~~
+          ╵                                                       undefined
+
+  This file is considered to be an ECMAScript module because of the "export" keyword here:
+
+    node_modules/@angular/fire/fesm2022/angular-fire.mjs:210:0:
+      210 │ export { LogLevel, VERSION, setLogLevel, ɵAngularFireSchedulers,...
+          ╵ ~~~~~~
+
+4 errors
+✔ Building...
+Application bundle generation failed. [3.006 seconds] - 2025-10-22T12:23:39.686Z
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG1010: 'imports' must be an array of components, directives, pipes, or NgModules.
+  Value could not be determined statically.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/auth/auth.component.ts:9:12:
+[37m      9 │   imports: [[32mReactiveFormsModule[37m],
+        ╵             [32m~~~~~~~~~~~~~~~~~~~[0m
+
+  Unknown reference.
+
+    src/app/components/auth/auth.component.ts:9:12:
+[37m      9 │   imports: [[32mReactiveFormsModule[37m],
+        ╵             [32m~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'ReactiveFormsModule'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/auth/auth.component.ts:9:12:
+[37m      9 │   imports: [[32mReactiveFormsModule[37m],
+        ╵             [32m~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG1010: 'imports' must be an array of components, directives, pipes, or NgModules.
+  Value could not be determined statically.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/products/products.component.ts:8:12:
+[37m      8 │   imports: [[32mReactiveFormsModule[37m],
+        ╵             [32m~~~~~~~~~~~~~~~~~~~[0m
+
+  Unknown reference.
+
+    src/app/components/products/products.component.ts:8:12:
+[37m      8 │   imports: [[32mReactiveFormsModule[37m],
+        ╵             [32m~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2304: Cannot find name 'ReactiveFormsModule'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/products/products.component.ts:8:12:
+[37m      8 │   imports: [[32mReactiveFormsModule[37m],
+        ╵             [32m~~~~~~~~~~~~~~~~~~~[0m
+
+

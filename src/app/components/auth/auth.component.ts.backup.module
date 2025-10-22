@@ -1,13 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AuthService } from "../../services/auth.service";
+import { AuthService } from '../../../services/auth.service';
 import { User } from '@angular/fire/auth';
 import { UserCredential } from '@angular/fire/auth';
 
 @Component({
-  imports: [ReactiveFormsModule],
-  standalone: true,  selector: 'app-auth',
+  selector: 'app-auth',
   templateUrl: './auth.component.html',
   styleUrls: ['./auth.component.scss']
 })

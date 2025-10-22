@@ -30,7 +30,7 @@ export class AppComponent implements OnInit {
   }
 
   logout(): void {
-    this.authService.logout$().subscribe({
+    this.authService.logout().subscribe({
       next: () => {
         console.log('Logout réussi');
         this.router.navigate(['/auth']);

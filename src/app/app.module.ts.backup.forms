@@ -36,7 +36,7 @@ const routes: Routes = [
     PurchaseOrderComponent
   ],
   imports: [
-      ReactiveFormsModule,      ProductsComponent,      ProductsComponent,      AngularFireModule.initializeApp(environment.firebaseConfig),
+      ProductsComponent,      ProductsComponent,      AngularFireModule.initializeApp(environment.firebaseConfig),
       AngularFirestoreModule,    BrowserModule,
     RouterModule.forRoot(routes),
     FormsModule,

@@ -1,0 +1,35 @@
+import { Injectable } from '@angular/core';
+import { Auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, User } from '@angular/fire/auth';
+import { Observable, from } from 'rxjs';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AuthService {
+  private user$: Observable<User | null> | null = null;
+
+  constructor(private auth: Auth) {
+    this.user$ = new Observable<User | null>(observer => {
+      const unsubscribe = onAuthStateChanged(this.auth, (user) => {
+        observer.next(user);
+      });
+      return unsubscribe;
+    });
+  }
+
+  signIn(email: string, password: string): Promise<UserCredential> {
+    return signInWithEmailAndPassword(this.auth, email, password);
+  }
+
+  register(email: string, password: string): Promise<UserCredential> {
+    return createUserWithEmailAndPassword(this.auth, email, password);
+  }
+
+  logout(): Promise<void> {
+    return signOut(this.auth);
+  }
+
+  getCurrentUser(): Observable<User | null> {
+    return this.user$ as Observable<User | null>;
+  }
+}

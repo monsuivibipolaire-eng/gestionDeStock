@@ -1,8 +1,7 @@
-import { Environment } from './environment.interface';
 
-export const environment: Environment = {
+export const environment = {
   production: true,
-  firebase: {
+  firebaseConfig: {
     apiKey: "AIzaSyAQVmx7uF84Gyz7WIQ229dDzTZ36GJbP5E",
     authDomain: "gestiondestock-5eb46.firebaseapp.com",
     projectId: "gestiondestock-5eb46",

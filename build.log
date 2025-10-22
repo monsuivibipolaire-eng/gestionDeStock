@@ -1,0 +1,301 @@
+❯ Building...
+
+  polyfills.js       87.7kb
+  polyfills.js.map  188.5kb
+
+⚡ Done in 116ms
+✘ [ERROR] NG6001: The class 'AuthComponent' is listed in the declarations of the NgModule 'AppModule', but is not a directive, a component, or a pipe. Either remove it from the NgModule's declarations, or add an appropriate Angular decorator. [plugin angular-compiler]
+
+    src/app/app.module.ts:34:4:
+      34 │     AuthComponent,
+         ╵     ~~~~~~~~~~~~~
+
+  'AuthComponent' is declared here.
+
+    src/app/components/auth/auth.component.ts:13:13:
+      13 │ export class AuthComponent implements OnInit {
+         ╵              ~~~~~~~~~~~~~
+
+✘ [ERROR] NG6008: Component ProductsComponent is standalone, and cannot be declared in an NgModule. Did you mean to import it instead? [plugin angular-compiler]
+
+    src/app/app.module.ts:35:4:
+      35 │     ProductsComponent,
+         ╵     ~~~~~~~~~~~~~~~~~
+
+✘ [ERROR] NG6002: 'AuthComponent' does not appear to be an NgModule class. [plugin angular-compiler]
+
+    src/app/app.module.ts:41:6:
+      41 │       AuthComponent,
+         ╵       ~~~~~~~~~~~~~
+
+  Is it missing an @NgModule annotation?
+
+    src/app/components/auth/auth.component.ts:13:13:
+      13 │ export class AuthComponent implements OnInit {
+         ╵              ~~~~~~~~~~~~~
+
+✘ [ERROR] TS2307: Cannot find module '../../../services/auth.service' or its corresponding type declarations. [plugin angular-compiler]
+
+    src/app/components/auth/auth.component.ts:4:28:
+      4 │ import { AuthService } from "../../../services/auth.service";
+        ╵                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+✘ [ERROR] NG2003: No suitable injection token for parameter 'authService' of class 'AuthComponent'.
+  Consider using the @Inject decorator to specify an injection token. [plugin angular-compiler]
+
+    src/app/components/auth/auth.component.ts:23:12:
+      23 │     private authService: AuthService,
+         ╵             ~~~~~~~~~~~
+
+  This type does not have a value, so it cannot be used as injection token.
+
+    src/app/components/auth/auth.component.ts:23:25:
+      23 │     private authService: AuthService,
+         ╵                          ~~~~~~~~~~~
+
+✘ [ERROR] TS2307: Cannot find module '../../../models/product' or its corresponding type declarations. [plugin angular-compiler]
+
+    src/app/components/products/products.component.ts:5:24:
+      5 │ ...rt { Product } from "../../../models/product";import { ProductsS...
+        ╵                        ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:17:6:
+      17 │       "types": "./index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:15:6:
+      15 │       "import": "./index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:16:6:
+      16 │       "require": "./index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:22:6:
+      22 │       "types": "./auth/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:20:6:
+      20 │       "import": "./auth/index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:21:6:
+      21 │       "require": "./auth/index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:27:6:
+      27 │       "types": "./database/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:25:6:
+      25 │       "import": "./database/index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:26:6:
+      26 │       "require": "./database/index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:32:6:
+      32 │       "types": "./firestore/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:30:6:
+      30 │       "import": "./firestore/index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:31:6:
+      31 │       "require": "./firestore/index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:37:6:
+      37 │       "types": "./firestore/lite/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:35:6:
+      35 │       "import": "./firestore/lite/index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:36:6:
+      36 │       "require": "./firestore/lite/index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:42:6:
+      42 │       "types": "./functions/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:40:6:
+      40 │       "import": "./functions/index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:41:6:
+      41 │       "require": "./functions/index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:47:6:
+      47 │       "types": "./performance/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:45:6:
+      45 │       "import": "./performance/index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:46:6:
+      46 │       "require": "./performance/index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:52:6:
+      52 │       "types": "./remote-config/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:50:6:
+      50 │       "import": "./remote-config/index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:51:6:
+      51 │       "require": "./remote-config/index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    node_modules/rxfire/package.json:57:6:
+      57 │       "types": "./storage/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    node_modules/rxfire/package.json:55:6:
+      55 │       "import": "./storage/index.esm.js",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    node_modules/rxfire/package.json:56:6:
+      56 │       "require": "./storage/index.cjs.js",
+         ╵       ~~~~~~~~~
+
+● [DEBUG] Top-level "this" will be replaced with undefined since this file is an ECMAScript module [this-is-undefined-in-esm]
+
+    node_modules/@angular/fire/fesm2022/angular-fire.mjs:143:68:
+      143 │ ...njectionContext(injector, () => run(() => it.apply(this, args)));
+          │                                                       ~~~~
+          ╵                                                       undefined
+
+  This file is considered to be an ECMAScript module because of the "export" keyword here:
+
+    node_modules/@angular/fire/fesm2022/angular-fire.mjs:210:0:
+      210 │ export { LogLevel, VERSION, setLogLevel, ɵAngularFireSchedulers,...
+          ╵ ~~~~~~
+
+6 errors
+✔ Building...
+Application bundle generation failed. [2.828 seconds] - 2025-10-22T12:20:40.389Z
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG6001: The class 'AuthComponent' is listed in the declarations of the NgModule 'AppModule', but is not a directive, a component, or a pipe. Either remove it from the NgModule's declarations, or add an appropriate Angular decorator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/app.module.ts:34:4:
+[37m      34 │     [32mAuthComponent[37m,
+         ╵     [32m~~~~~~~~~~~~~[0m
+
+  'AuthComponent' is declared here.
+
+    src/app/components/auth/auth.component.ts:13:13:
+[37m      13 │ export class [32mAuthComponent[37m implements OnInit {
+         ╵              [32m~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG6008: Component ProductsComponent is standalone, and cannot be declared in an NgModule. Did you mean to import it instead?[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/app.module.ts:35:4:
+[37m      35 │     [32mProductsComponent[37m,
+         ╵     [32m~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG6002: 'AuthComponent' does not appear to be an NgModule class.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/app.module.ts:41:6:
+[37m      41 │       [32mAuthComponent[37m,
+         ╵       [32m~~~~~~~~~~~~~[0m
+
+  Is it missing an @NgModule annotation?
+
+    src/app/components/auth/auth.component.ts:13:13:
+[37m      13 │ export class [32mAuthComponent[37m implements OnInit {
+         ╵              [32m~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module '../../../services/auth.service' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/auth/auth.component.ts:4:28:
+[37m      4 │ import { AuthService } from [32m"../../../services/auth.service"[37m;
+        ╵                             [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG2003: No suitable injection token for parameter 'authService' of class 'AuthComponent'.
+  Consider using the @Inject decorator to specify an injection token.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/auth/auth.component.ts:23:12:
+[37m      23 │     private [32mauthService[37m: AuthService,
+         ╵             [32m~~~~~~~~~~~[0m
+
+  This type does not have a value, so it cannot be used as injection token.
+
+    src/app/components/auth/auth.component.ts:23:25:
+[37m      23 │     private authService: [32mAuthService[37m,
+         ╵                          [32m~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module '../../../models/product' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/products/products.component.ts:5:24:
+[37m      5 │ ...rt { Product } from [32m"../../../models/product"[37m;import { ProductsS...
+        ╵                        [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+

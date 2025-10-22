@@ -1,12 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { Router } from '@angular/router';
-import { Product } from "../../models/product";import { ProductsService } from '../../services/products.service';
+import { ProductsService, Product } from '../../services/products.service';
 
 @Component({
-  imports: [ReactiveFormsModule],
-  standalone: true,  selector: 'app-products',
+  selector: 'app-products',
   templateUrl: './products.component.html',
   styleUrls: ['./products.component.scss']
 })

@@ -31,12 +31,14 @@ const routes: Routes = [
 @NgModule({
   declarations: [
     AppComponent,
+    AuthComponent,
+    ProductsComponent,
     EntryVoucherComponent,
     ExitVoucherComponent,
     PurchaseOrderComponent
   ],
   imports: [
-      ReactiveFormsModule,      ProductsComponent,      ProductsComponent,      AngularFireModule.initializeApp(environment.firebaseConfig),
+      AngularFireModule.initializeApp(environment.firebaseConfig),
       AngularFirestoreModule,    BrowserModule,
     RouterModule.forRoot(routes),
     FormsModule,
