@@ -1,0 +1,9 @@
+Thu Oct 23 06:28:45 CET 2025: Debug bouton Imprimer Liste...
+=== Vérification HTML ===
+✅ HTML : Bouton appelle printList()
+=== Vérification TS ===
+✅ TS : Méthode printList() existe
+Backup créé
+✅ Méthodes printList() + generatePrintHTML() ajoutées
+=== Validation TypeScript ===
+✅ TS compilation OK
