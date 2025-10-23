@@ -10,13 +10,12 @@ export interface ProductLine {
 
 export interface ExitVoucher {
   id?: string;
+  voucherNumber: string;
   date: Timestamp | Date;
-  customer: string;  // Nom client (ou destination si transfert)
-  destination?: string;  // Destination transfert/perte
-  type: 'sale' | 'transfer' | 'loss';  // Type sortie (vente, transfert, perte)
+  customer: string;
+  destination?: string;
   products: ProductLine[];
   totalAmount: number;
-  status: 'pending' | 'validated' | 'cancelled';
   notes?: string;
-  createdAt?: Timestamp | Date;
+  createdAt?: Date;
 }

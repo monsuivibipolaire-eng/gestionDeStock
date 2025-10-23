@@ -11,7 +11,6 @@ import { environment } from '../environments/environment';
 import { AppComponent } from './app.component';
 import { AuthComponent } from './components/auth/auth.component';
 import { ProductsComponent } from './components/products/products.component';
-import { ExitVoucherComponent } from './components/exit-voucher/exit-voucher.component';
 import { PurchaseOrderComponent } from './components/purchase-order/purchase-order.component';
 
 const routes: Routes = [
@@ -19,7 +18,7 @@ const routes: Routes = [
   { path: 'customers', component: CustomersComponent },  { path: 'devis', component: DevisComponent },  { path: 'auth', component: AuthComponent },
   { path: 'products', component: ProductsComponent },
   { path: 'entry-voucher', loadComponent: () => import('./components/entry-voucher/entry-voucher.component').then(m => m.EntryVoucherComponent) },
-  { path: 'exit-voucher', component: ExitVoucherComponent },
+  { path: 'exit-voucher', loadComponent: () => import('./components/exit-voucher/exit-voucher.component').then(m => m.ExitVoucherComponent) },
   { path: 'purchase-order', component: PurchaseOrderComponent },
   { path: '', redirectTo: '/products', pathMatch: 'full' },
   { path: '**', redirectTo: '/products' }
@@ -37,7 +36,6 @@ const routes: Routes = [
     // Standalone components ici (pas de provide*)
     AuthComponent,
     ProductsComponent,
-    ExitVoucherComponent,
     PurchaseOrderComponent
   ],
   providers: [
