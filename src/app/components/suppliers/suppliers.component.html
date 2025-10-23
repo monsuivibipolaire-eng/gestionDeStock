@@ -6,41 +6,58 @@
     <button (click)="errorMessage = ''" class="float-right">&times;</button>
   </div>
 
-  <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-    <!-- Remplacé input text par ng-select -->
-    <ng-select 
-      [(ngModel)]="selectedSupplierId" 
-      
-      [items]="(suppliers$ | async) ?? []" 
-      bindLabel="name" 
-      bindValue="id" 
-      placeholder="🔍 Sélectionnez un fournisseur (ou voir tous)"
-      [searchable]="true" 
-      [clearable]="true"
-      class="w-full md:w-1/2">
-      <ng-template ng-option-tmp let-item="item">
-        <div class="flex flex-col">
-          <span class="font-medium">{{ item.name }}</span>
-          <span class="text-xs text-gray-500">{{ item.email || 'Pas d\'email' }} • {{ item.phone || 'Pas de tél.' }}</span>
-        </div>
-      </ng-template>
-    </ng-select>
-    
+  <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+    <input type="text" [ngModel]="searchTerm" (ngModelChange)="onSearchChange($event)"
+           placeholder="🔍 Rechercher (nom, email, téléphone)..." class="w-full md:w-1/2 px-4 py-2 border rounded-lg" />
     <div class="flex gap-2">
-      <button (click)="print()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg flex items-center space-x-2 no-print">
+      <button (click)="printList()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg flex items-center space-x-2">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
         </svg>
-        <span>Imprimer</span>
+        <span>Imprimer Liste</span>
       </button>
-      <button (click)="toggleForm()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg no-print">
-        <span *ngIf="!showForm">+ Ajouter Fournisseur</span>
+      <button (click)="toggleForm()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg">
+        <span *ngIf="!showForm">+ Ajouter</span>
         <span *ngIf="showForm">Fermer</span>
       </button>
     </div>
   </div>
 
-  <div *ngIf="showForm" class="bg-white shadow-md rounded-lg p-6 mb-6 no-print">
+  <!-- Filtres Avancés -->
+  <div class="bg-white shadow-md rounded-lg p-4 mb-6">
+    <h3 class="text-lg font-semibold mb-3 flex items-center">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+      </svg>
+      Filtres Avancés
+    </h3>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Ville</label>
+        <input type="text" [ngModel]="cityFilter" (ngModelChange)="onCityFilterChange($event)"
+               placeholder="Filtrer par ville" class="w-full px-3 py-2 border rounded-lg" />
+      </div>
+      
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Trier par</label>
+        <select [ngModel]="sortBy" (ngModelChange)="onSortChange($event)" class="w-full px-3 py-2 border rounded-lg">
+          <option value="name">Nom {{ sortBy === 'name' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}</option>
+          <option value="city">Ville {{ sortBy === 'city' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}</option>
+          <option value="email">Email {{ sortBy === 'email' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="mt-4">
+      <button (click)="clearFilters()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+        Réinitialiser Filtres
+      </button>
+    </div>
+  </div>
+
+  <!-- Formulaire -->
+  <div *ngIf="showForm" class="bg-white shadow-md rounded-lg p-6 mb-6">
     <h2 class="text-2xl font-semibold mb-4">{{ isEditing ? 'Modifier' : 'Nouveau' }} Fournisseur</h2>
     <form [formGroup]="supplierForm" (ngSubmit)="onSubmit()" class="space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -49,19 +66,21 @@
           <input formControlName="name" type="text" class="w-full px-4 py-2 border rounded-lg" />
         </div>
         <div>
-          <label class="block text-gray-700 font-medium mb-2">Email</label>
+          <label class="block text-gray-700 font-medium mb-2">Email *</label>
           <input formControlName="email" type="email" class="w-full px-4 py-2 border rounded-lg" />
         </div>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-gray-700 font-medium mb-2">Téléphone</label>
+          <label class="block text-gray-700 font-medium mb-2">Téléphone *</label>
           <input formControlName="phone" type="text" class="w-full px-4 py-2 border rounded-lg" />
         </div>
         <div>
-          <label class="block text-gray-700 font-medium mb-2">Adresse</label>
-          <input formControlName="address" type="text" class="w-full px-4 py-2 border rounded-lg" />
+          <label class="block text-gray-700 font-medium mb-2">Ville</label>
+          <input formControlName="city" type="text" class="w-full px-4 py-2 border rounded-lg" />
         </div>
+      </div>
+      <div>
+        <label class="block text-gray-700 font-medium mb-2">Adresse</label>
+        <textarea formControlName="address" rows="2" class="w-full px-4 py-2 border rounded-lg"></textarea>
       </div>
       <div>
         <label class="block text-gray-700 font-medium mb-2">Notes</label>
@@ -70,41 +89,35 @@
       <div class="flex gap-4">
         <button type="submit" [disabled]="isLoading || supplierForm.invalid"
                 class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg disabled:bg-gray-400">
-          {{ isEditing ? 'Mettre à jour' : 'Ajouter' }}
+          <span *ngIf="isLoading">Enregistrement...</span>
+          <span *ngIf="!isLoading">{{ isEditing ? 'Mettre à jour' : 'Ajouter' }}</span>
         </button>
         <button type="button" (click)="resetForm()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg">Annuler</button>
       </div>
     </form>
   </div>
 
-  <div *ngIf="!isLoading" class="bg-white shadow-md rounded-lg overflow-hidden">
-    <table class="min-w-full divide-y divide-gray-200">
-      <thead class="bg-gray-50">
-        <tr>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nom</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Téléphone</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Adresse</th>
-          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase no-print">Actions</th>
-        </tr>
-      </thead>
-      <tbody class="bg-white divide-y divide-gray-200" *ngIf="filteredSuppliers$ | async as suppliers">
-        <tr *ngFor="let supplier of suppliers" class="hover:bg-gray-50">
-          <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ supplier.name }}</td>
-          <td class="px-6 py-4 text-sm text-gray-500">{{ supplier.email || 'N/A' }}</td>
-          <td class="px-6 py-4 text-sm text-gray-500">{{ supplier.phone || 'N/A' }}</td>
-          <td class="px-6 py-4 text-sm text-gray-500">{{ supplier.address || 'N/A' }}</td>
-          <td class="px-6 py-4 text-right text-sm font-medium no-print">
-            <button (click)="editSupplier(supplier)" class="text-indigo-600 hover:text-indigo-900 mr-4">Modifier</button>
-            <button (click)="deleteSupplier(supplier.id!, supplier.name)" class="text-red-600 hover:text-red-900">Supprimer</button>
-          </td>
-        </tr>
-        <tr *ngIf="suppliers.length === 0">
-          <td colspan="5" class="px-6 py-8 text-center text-gray-500">
-            {{ selectedSupplierId ? 'Fournisseur sélectionné non trouvé.' : 'Aucun fournisseur trouvé.' }}
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- Liste -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div *ngFor="let supplier of filteredSuppliers$ | async" class="bg-white shadow-lg rounded-lg p-6 hover:shadow-xl transition">
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h3 class="text-xl font-bold text-gray-800">{{ supplier.name }}</h3>
+          <p class="text-sm text-gray-500">{{ supplier.city || 'Ville non spécifiée' }}</p>
+        </div>
+      </div>
+      <div class="space-y-2 mb-4">
+        <p class="text-sm"><strong>Email :</strong> {{ supplier.email || 'N/A' }}</p>
+        <p class="text-sm"><strong>Téléphone :</strong> {{ supplier.phone || 'N/A' }}</p>
+        <p class="text-sm" *ngIf="supplier.address"><strong>Adresse :</strong> {{ supplier.address }}</p>
+      </div>
+      <div class="flex gap-2">
+        <button (click)="editSupplier(supplier)" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm">Modifier</button>
+        <button (click)="deleteSupplier(supplier.id!, supplier.name)" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm">Supprimer</button>
+      </div>
+    </div>
+    <div *ngIf="(filteredSuppliers$ | async)?.length === 0" class="col-span-full text-center py-8 text-gray-500">
+      Aucun fournisseur trouvé.
+    </div>
   </div>
 </div>
