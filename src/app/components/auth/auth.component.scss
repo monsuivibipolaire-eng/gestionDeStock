@@ -1,16 +1,1 @@
-/* Styles custom si besoin (Tailwind gère la plupart) */
-.auth-container {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #f3f4f6;  /* Tailwind gray-100 */
-}
-
-/* Responsive */
-@media (max-width: 640px) {
-  .container {
-    margin: 1rem;
-    padding: 1.5rem;
-  }
-}
+// Styles auth

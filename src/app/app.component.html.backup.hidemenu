@@ -1,5 +1,4 @@
-<!-- Afficher sidebar/header SEULEMENT si connecté -->
-<div *ngIf="currentUser" class="min-h-screen flex bg-gray-100">
+<div class="min-h-screen flex bg-gray-100">
   <!-- Sidebar -->
   <aside [ngClass]="{'w-64': isSidebarOpen, 'w-20': !isSidebarOpen}" 
          class="bg-gradient-to-b from-blue-600 to-blue-800 text-white transition-all duration-300 shadow-lg">
@@ -92,7 +91,7 @@
       </a>
 
       <!-- Déconnexion -->
-      <button (click)="logout()" type="button"
+      <button (click)="logout()" 
               class="w-full flex items-center px-4 py-3 hover:bg-red-700 transition text-left border-t border-blue-700 mt-4">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -112,7 +111,7 @@
         
         <!-- User Info -->
         <div class="flex items-center space-x-4">
-          <div class="flex items-center space-x-3">
+          <div *ngIf="currentUser" class="flex items-center space-x-3">
             <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
               <span class="text-sm font-bold">{{ getUserInitial() }}</span>
             </div>
@@ -129,9 +128,4 @@
       <router-outlet></router-outlet>
     </main>
   </div>
-</div>
-
-<!-- Si PAS connecté : afficher seulement router-outlet (page login) -->
-<div *ngIf="!currentUser" class="min-h-screen">
-  <router-outlet></router-outlet>
 </div>

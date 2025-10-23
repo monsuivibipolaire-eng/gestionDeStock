@@ -24,6 +24,9 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     onAuthStateChanged(this.auth, (user) => {
       this.currentUser = user;
+      if (!user) {
+        this.router.navigate(['/login']);
+      }
     });
   }
 
@@ -41,9 +44,11 @@ export class AppComponent implements OnInit {
   async logout(): Promise<void> {
     try {
       await signOut(this.auth);
-      this.router.navigate(['/']);
+      this.currentUser = null;
+      this.router.navigate(['/login']);
     } catch (error) {
       console.error('Erreur logout:', error);
+      alert('Erreur lors de la déconnexion');
     }
   }
 }
