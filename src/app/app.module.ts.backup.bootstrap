@@ -1,0 +1,36 @@
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { RouterModule, Routes } from '@angular/router';
+import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
+import { provideFirestore, getFirestore } from '@angular/fire/firestore';
+import { provideAuth, getAuth } from '@angular/fire/auth';
+import { environment } from '../environments/environment';
+
+import { AppComponent } from './app.component';
+
+const routes: Routes = [
+  { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
+  { path: 'dashboard', loadComponent: () => import('./components/dashboard/dashboard.component').then(m => m.DashboardComponent) },
+  { path: 'products', loadComponent: () => import('./components/products/products.component').then(m => m.ProductsComponent) },
+  { path: 'suppliers', loadComponent: () => import('./components/suppliers/suppliers.component').then(m => m.SuppliersComponent) },
+  { path: 'customers', loadComponent: () => import('./components/customers/customers.component').then(m => m.CustomersComponent) },
+  { path: 'entry-voucher', loadComponent: () => import('./components/entry-voucher/entry-voucher.component').then(m => m.EntryVoucherComponent) },
+  { path: 'exit-voucher', loadComponent: () => import('./components/exit-voucher/exit-voucher.component').then(m => m.ExitVoucherComponent) },
+  { path: 'purchase-order', loadComponent: () => import('./components/purchase-order/purchase-order.component').then(m => m.PurchaseOrderComponent) },
+  { path: 'devis', loadComponent: () => import('./components/devis/devis.component').then(m => m.DevisComponent) }
+];
+
+@NgModule({
+  
+  imports: [
+    AppComponent,
+    BrowserModule,
+    RouterModule.forRoot(routes)
+  ],
+  providers: [
+    provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
+    provideFirestore(() => getFirestore()),
+    provideAuth(() => getAuth())
+  ]
+})
+export class AppModule { }

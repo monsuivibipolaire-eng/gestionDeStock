@@ -1,0 +1,191 @@
+<div class="container mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold text-gray-800 mb-6">Devis (Quotations)</h1>
+
+  <div *ngIf="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+    <strong>Erreur :</strong> {{ errorMessage }}
+    <button (click)="errorMessage = ''" class="float-right">&times;</button>
+  </div>
+
+  <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+    <input type="text" [ngModel]="searchTerm" (ngModelChange)="onSearchChange($event)"
+           placeholder="Rechercher par client ou numéro..." class="w-full md:w-1/2 px-4 py-2 border rounded-lg" />
+    <div class="flex gap-2">
+      <button (click)="print()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg flex items-center space-x-2 no-print">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+        </svg>
+        <span>Imprimer</span>
+      </button>
+      <button (click)="toggleForm()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg no-print">
+        <span *ngIf="!showForm">+ Nouveau Devis</span>
+        <span *ngIf="showForm">Fermer</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Formulaire -->
+  <div *ngIf="showForm" class="bg-white shadow-md rounded-lg p-6 mb-6 no-print">
+    <h2 class="text-2xl font-semibold mb-4">{{ isEditing ? 'Modifier' : 'Nouveau' }} Devis</h2>
+    <form [formGroup]="devisForm" (ngSubmit)="onSubmit()" class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+          <label class="block text-gray-700 font-medium mb-2">N° Devis *</label>
+          <input formControlName="quoteNumber" type="text" class="w-full px-4 py-2 border rounded-lg bg-gray-100" readonly />
+        </div>
+        <div>
+          <label class="block text-gray-700 font-medium mb-2">Date *</label>
+          <input formControlName="date" type="date" />
+        </div>
+        <div>
+          <label class="block text-gray-700 font-medium mb-2">Valable Jusqu'au *</label>
+          <input formControlName="validUntil" type="date" />
+        </div>
+        <div>
+          <label class="block text-gray-700 font-medium mb-2">Statut</label>
+          <select formControlName="status" class="w-full px-4 py-2 border rounded-lg">
+            <option value="draft">Brouillon</option>
+            <option value="sent">Envoyé</option>
+            <option value="accepted">Accepté</option>
+            <option value="rejected">Refusé</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-gray-700 font-medium mb-2">Client *</label>
+          <ng-select formControlName="customer" [items]="(customers$ | async) ?? []" bindLabel="name" bindValue="name" placeholder="-- Sélectionnez un client --" [searchable]="true" [clearable]="true" class="w-full"></ng-select>
+        </div>
+        <div>
+          <label class="block text-gray-700 font-medium mb-2">Email Client</label>
+          <input formControlName="customerEmail" type="email" />
+        </div>
+      </div>
+
+      <!-- Lignes Produits -->
+      <div class="border-t pt-4">
+        <h3 class="text-lg font-semibold mb-3">Produits</h3>
+        <div formArrayName="products" class="space-y-3">
+          <div *ngFor="let product of productsFormArray.controls; let i = index" [formGroupName]="i"
+               class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end bg-gray-50 p-3 rounded">
+            <div class="md:col-span-4">
+              <label class="block text-sm text-gray-600 mb-1">Produit *</label>
+              <select formControlName="productId" class="w-full px-3 py-2 border rounded">
+                <option value="">-- Sélectionnez --</option>
+                <option *ngFor="let p of products$ | async" [value]="p.id">{{ p.name }}</option>
+              </select>
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm text-gray-600 mb-1">Quantité *</label>
+              <input formControlName="quantity" type="number" class="w-full px-3 py-2 border rounded" />
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm text-gray-600 mb-1">Prix Unit. (DT) *</label>
+              <input formControlName="unitPrice" type="number" step="0.01" class="w-full px-3 py-2 border rounded" />
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm text-gray-600 mb-1">Sous-total</label>
+              <input [value]="calculateSubtotal(i) | number:'1.3-3'" readonly class="w-full px-3 py-2 border rounded bg-gray-100" />
+            </div>
+            <div class="md:col-span-2 flex gap-2">
+              <button type="button" (click)="addProductLine()" class="bg-blue-500 text-white px-3 py-2 rounded">+</button>
+              <button type="button" (click)="removeProductLine(i)" [disabled]="productsFormArray.length === 1"
+                      class="bg-red-500 text-white px-3 py-2 rounded disabled:bg-gray-300">-</button>
+            </div>
+          </div>
+        </div>
+        <div class="mt-4 bg-blue-50 p-4 rounded space-y-2">
+          <div class="flex justify-between text-lg">
+            <span>Total HT :</span>
+            <span class="font-bold">{{ calculateTotal() | number:'1.3-3' }} DT</span>
+          </div>
+          <div class="flex justify-between">
+            <span>TVA (19%) :</span>
+            <span>{{ calculateTVA() | number:'1.3-3' }} DT</span>
+          </div>
+          <div class="flex justify-between text-xl border-t pt-2">
+            <span class="font-bold">Total TTC :</span>
+            <span class="font-bold text-blue-600">{{ calculateTTC() | number:'1.3-3' }} DT</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-gray-700 font-medium mb-2">Notes</label>
+        <textarea formControlName="notes" rows="2" class="w-full px-4 py-2 border rounded-lg"></textarea>
+      </div>
+
+      <div class="flex gap-4">
+        <button type="submit" [disabled]="isLoading || devisForm.invalid"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg disabled:bg-gray-400">
+          <span *ngIf="isLoading">Enregistrement...</span>
+          <span *ngIf="!isLoading">{{ isEditing ? 'Mettre à jour' : 'Créer Devis' }}</span>
+        </button>
+        <button type="button" (click)="resetForm()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg">Annuler</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Liste avec accordion -->
+  <div *ngIf="!isLoading" class="space-y-4">
+    <div *ngFor="let devis of filteredDevis$ | async" class="bg-white shadow rounded-lg overflow-hidden">
+      <div class="px-6 py-4 flex justify-between items-center cursor-pointer hover:bg-gray-50"
+           (click)="toggleExpand(devis.id!)">
+        <div class="flex-1 grid grid-cols-6 gap-4">
+          <div><strong>N° :</strong> {{ devis.quoteNumber }}</div>
+          <div><strong>Date:</strong> {{ formatDate(devis.date) }}</div>
+          <div><strong>Client:</strong> {{ devis.customer }}</div>
+          <div><strong>Valide:</strong> {{ formatDate(devis.validUntil) }}</div>
+          <div><strong>Total TTC:</strong> {{ devis.totalAmount | number:'1.3-3' }} DT</div>
+          <div><span [ngClass]="{
+            'bg-gray-100 text-gray-800': devis.status === 'draft',
+            'bg-blue-100 text-blue-800': devis.status === 'sent',
+            'bg-green-100 text-green-800': devis.status === 'accepted',
+            'bg-red-100 text-red-800': devis.status === 'rejected'
+          }" class="px-2 py-1 rounded">{{ getStatusLabel(devis.status) }}</span></div>
+        </div>
+        <button class="text-blue-600 no-print">{{ expandedDevisId === devis.id ? '▼' : '►' }}</button>
+      </div>
+      
+      <div *ngIf="expandedDevisId === devis.id" class="px-6 py-4 bg-gray-50 border-t">
+        <table class="min-w-full">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-2 text-left text-sm">Produit</th>
+              <th class="px-4 py-2 text-left text-sm">Quantité</th>
+              <th class="px-4 py-2 text-left text-sm">Prix Unit.</th>
+              <th class="px-4 py-2 text-left text-sm">Sous-total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let line of devis.products" class="border-t">
+              <td class="px-4 py-2">{{ line.productName }}</td>
+              <td class="px-4 py-2">{{ line.quantity }}</td>
+              <td class="px-4 py-2">{{ line.unitPrice | number:'1.3-3' }} DT</td>
+              <td class="px-4 py-2 font-semibold">{{ line.subtotal | number:'1.3-3' }} DT</td>
+            </tr>
+            <tr class="bg-blue-50 font-semibold">
+              <td colspan="3" class="px-4 py-2 text-right">Total HT :</td>
+              <td class="px-4 py-2">{{ devis.subtotal | number:'1.3-3' }} DT</td>
+            </tr>
+            <tr>
+              <td colspan="3" class="px-4 py-2 text-right">TVA (19%) :</td>
+              <td class="px-4 py-2">{{ devis.tva | number:'1.3-3' }} DT</td>
+            </tr>
+            <tr class="bg-blue-100 font-bold text-lg">
+              <td colspan="3" class="px-4 py-2 text-right">Total TTC :</td>
+              <td class="px-4 py-2 text-blue-600">{{ devis.totalAmount | number:'1.3-3' }} DT</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="mt-4 flex gap-2 no-print">
+          <button (click)="editDevis(devis)" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded">Modifier</button>
+          <button (click)="deleteDevis(devis.id!, devis.quoteNumber)" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">Supprimer</button>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="(filteredDevis$ | async)?.length === 0" class="text-center py-8 text-gray-500">
+      Aucun devis trouvé.
+    </div>
+  </div>
+</div>

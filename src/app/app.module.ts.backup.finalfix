@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { SuppliersComponent } from './components/suppliers/suppliers.component';
-import { CustomersComponent } from './components/customers/customers.component';import { DevisComponent } from './components/devis/devis.component';import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule, Routes } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
@@ -11,15 +10,13 @@ import { environment } from '../environments/environment';
 import { AppComponent } from './app.component';
 import { AuthComponent } from './components/auth/auth.component';
 import { ProductsComponent } from './components/products/products.component';
-import { PurchaseOrderComponent } from './components/purchase-order/purchase-order.component';
 
 const routes: Routes = [
   { path: 'suppliers', component: SuppliersComponent },
-  { path: 'customers', component: CustomersComponent },  { path: 'devis', component: DevisComponent },  { path: 'auth', component: AuthComponent },
+  { path: 'customers', component: CustomersComponent },  { path: 'devis', loadComponent: () => import('./components/devis/devis.component').then(m => m.DevisComponent) },  { path: 'auth', component: AuthComponent },
   { path: 'products', component: ProductsComponent },
   { path: 'entry-voucher', loadComponent: () => import('./components/entry-voucher/entry-voucher.component').then(m => m.EntryVoucherComponent) },
   { path: 'exit-voucher', loadComponent: () => import('./components/exit-voucher/exit-voucher.component').then(m => m.ExitVoucherComponent) },
-  { path: 'purchase-order', component: PurchaseOrderComponent },
   { path: '', redirectTo: '/products', pathMatch: 'full' },
   { path: '**', redirectTo: '/products' }
 ];
@@ -36,7 +33,6 @@ const routes: Routes = [
     // Standalone components ici (pas de provide*)
     AuthComponent,
     ProductsComponent,
-    PurchaseOrderComponent
   ],
   providers: [
     // Firebase providers ici (pas dans imports)

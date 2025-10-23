@@ -1,15 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { Auth, signOut, onAuthStateChanged, User } from '@angular/fire/auth';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss'],
-  standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive]
+  styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
   title = 'gestion-stock';
@@ -29,13 +25,6 @@ export class AppComponent implements OnInit {
 
   toggleSidebar(): void {
     this.isSidebarOpen = !this.isSidebarOpen;
-  }
-
-  getUserInitial(): string {
-    if (!this.currentUser?.email) {
-      return 'U';
-    }
-    return this.currentUser.email.charAt(0).toUpperCase();
   }
 
   async logout(): Promise<void> {

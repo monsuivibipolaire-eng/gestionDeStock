@@ -10,16 +10,13 @@ export interface ProductLine {
 
 export interface Devis {
   id?: string;
-  quoteNumber: string;  // Ex: "DEV-2025-001"
+  quoteNumber: string;
   date: Timestamp | Date;
-  validUntil: Timestamp | Date;  // Date validité devis
-  customer: string;  // Nom client
-  customerEmail?: string;
+  customer: string;
+  validUntil?: Timestamp | Date;
   products: ProductLine[];
-  subtotal: number;  // Somme subtotals (HT)
-  tva: number;  // TVA (19% en Tunisie)
-  totalAmount: number;  // TTC (subtotal + tva)
-  status: 'draft' | 'sent' | 'accepted' | 'rejected';  // Statut devis
+  totalAmount: number;
   notes?: string;
-  createdAt?: Timestamp | Date;
+  status?: 'draft' | 'sent' | 'accepted' | 'rejected';
+  createdAt?: Date;
 }

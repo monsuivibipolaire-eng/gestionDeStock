@@ -1,0 +1,9 @@
+[0;32m[INFO][0m Thu Oct 23 06:45:28 CET 2025: Ajout filtres avancés + Imprimer Liste dans Purchase Order...
+[0;32m[INFO][0m Backups créés
+[0;32m[INFO][0m ✅ Model purchase-order.ts créé
+[0;32m[INFO][0m ✅ Service purchase-orders.service.ts créé
+[0;32m[INFO][0m ✅ purchase-order.component.ts généré
+[0;32m[INFO][0m ✅ purchase-order.component.html généré
+[0;32m[INFO][0m ✅ Route Purchase Order corrigée
+[0;32m[INFO][0m Validation...
+[0;32m[INFO][0m ✅ TS OK!

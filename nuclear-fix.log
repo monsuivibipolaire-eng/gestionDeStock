@@ -1,0 +1,39 @@
+Thu Oct 23 07:07:01 CET 2025: NUCLEAR FIX - Suppression standalone partout...
+Recherche fichiers app.component.ts...
+src/app/app.component.ts
+
+=== Traitement: src/app/app.component.ts ===
+AVANT:
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent implements OnInit {
+  title = 'gestion-stock';
+  currentUser: User | null = null;
+  isSidebarOpen = true;
+
+  constructor(
+APRÈS:
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent implements OnInit {
+  title = 'gestion-stock';
+  currentUser: User | null = null;
+  isSidebarOpen = true;
+
+  constructor(
+✅ standalone supprimé de src/app/app.component.ts
+
+=== Vérification Globale ===
+Recherche 'standalone' dans src/app/app.component*...
+src/app/app.component.ts.backup.finalfix:  standalone: false,
+src/app/app.component.ts.backup.logout:  standalone: false,  // AppComponent dans NgModule
+src/app/app.component.ts.backup.menu:  standalone: false  // Pour NgModule (pas d'imports ici)
+
+Nettoyage cache Angular...
+Validation TypeScript...

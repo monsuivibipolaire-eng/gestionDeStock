@@ -99,7 +99,7 @@
           <span class="text-sm font-bold">{{ getUserInitial() }}</span>
         </div>
         <div class="flex-1 overflow-hidden">
-          <p class="text-sm font-medium truncate">{{ currentUser?.email }}</p>
+          <p class="text-sm font-medium truncate">{{ currentUser.email }}</p>
           <p class="text-xs text-blue-200">Admin</p>
         </div>
       </div>
