@@ -5,16 +5,16 @@ export interface ProductLine {
   productName: string;
   quantity: number;
   unitPrice: number;
-  subtotal: number;  // quantity * unitPrice
+  subtotal: number;
 }
 
 export interface EntryVoucher {
   id?: string;
+  voucherNumber: string;
   date: Timestamp | Date;
   supplier: string;
-  products: ProductLine[];  // Lignes produits (tableau dynamique)
-  totalAmount: number;  // Somme subtotals
-  status: 'pending' | 'validated' | 'cancelled';
+  products: ProductLine[];
+  totalAmount: number;
   notes?: string;
-  createdAt?: Timestamp | Date;
+  createdAt?: Date;
 }

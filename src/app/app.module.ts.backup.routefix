@@ -18,7 +18,7 @@ const routes: Routes = [
   { path: 'suppliers', component: SuppliersComponent },
   { path: 'customers', component: CustomersComponent },  { path: 'devis', component: DevisComponent },  { path: 'auth', component: AuthComponent },
   { path: 'products', component: ProductsComponent },
-  { path: 'entry-voucher', loadComponent: () => import('./components/entry-voucher/entry-voucher.component').then(m => m.EntryVoucherComponent) },
+  { path: 'entry-voucher', component: EntryVoucherComponent },
   { path: 'exit-voucher', component: ExitVoucherComponent },
   { path: 'purchase-order', component: PurchaseOrderComponent },
   { path: '', redirectTo: '/products', pathMatch: 'full' },

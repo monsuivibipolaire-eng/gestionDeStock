@@ -1,427 +1,47 @@
 #!/bin/bash
 
-# Script pour régénérer products.component.ts avec méthode printList() fonctionnelle
-# Usage: ./regenerate-products-print.sh
+# Script pour fixer route Entry Voucher (standalone component)
+# Usage: ./fix-entry-route.sh
 
-LOG_FILE="regen-products.log"
-echo "$(date): Régénération products.component.ts..." | tee "$LOG_FILE"
+LOG_FILE="fix-entry-route.log"
+echo "$(date): Fix route Entry Voucher..." | tee "$LOG_FILE"
 
-PRODUCTS_TS="src/app/components/products/products.component.ts"
+APP_MODULE="src/app/app.module.ts"
+APP_ROUTING="src/app/app-routing.module.ts"
 
 # Backup
-cp "$PRODUCTS_TS" "${PRODUCTS_TS}.backup.regen"
-echo "Backup créé: ${PRODUCTS_TS}.backup.regen" | tee -a "$LOG_FILE"
+cp "$APP_MODULE" "${APP_MODULE}.backup.routefix"
+[ -f "$APP_ROUTING" ] && cp "$APP_ROUTING" "${APP_ROUTING}.backup.routefix"
+echo "Backups créés" | tee -a "$LOG_FILE"
 
-# Régénération complète du fichier
-cat > "$PRODUCTS_TS" << 'EOFTS'
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { FormsModule } from '@angular/forms';
-import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
-import { map, take } from 'rxjs/operators';
-import { CommonModule } from '@angular/common';
-import { Product } from "../../models/product";
-import { ProductsService } from '../../services/products.service';
-
-@Component({
-  selector: 'app-products',
-  templateUrl: './products.component.html',
-  styleUrls: ['./products.component.scss'],
-  imports: [ReactiveFormsModule, CommonModule, FormsModule],
-  standalone: true
-})
-export class ProductsComponent implements OnInit {
-  products$!: Observable<Product[]>;
-  filteredProducts$!: Observable<Product[]>;
-  productForm: FormGroup;
-  isLoading = false;
-  isEditing = false;
-  editingId: string | null = null;
-  errorMessage = '';
-  
-  // Filtres
-  searchTerm = '';
-  searchTerm$ = new BehaviorSubject<string>('');
-  minPrice: number | null = null;
-  minPrice$ = new BehaviorSubject<number | null>(null);
-  maxPrice: number | null = null;
-  maxPrice$ = new BehaviorSubject<number | null>(null);
-  stockFilter: 'all' | 'rupture' | 'low' | 'ok' = 'all';
-  stockFilter$ = new BehaviorSubject<'all' | 'rupture' | 'low' | 'ok'>('all');
-  sortBy: 'name' | 'price' | 'quantity' = 'name';
-  sortBy$ = new BehaviorSubject<'name' | 'price' | 'quantity'>('name');
-  sortOrder: 'asc' | 'desc' = 'asc';
-  sortOrder$ = new BehaviorSubject<'asc' | 'desc'>('asc');
-  
-  showForm = false;
-
-  constructor(
-    private productsService: ProductsService,
-    private fb: FormBuilder
-  ) {
-    this.productForm = this.fb.group({
-      name: ['', Validators.required],
-      price: [0, [Validators.required, Validators.min(0)]],
-      quantity: [0, [Validators.required, Validators.min(0)]],
-      description: ['']
-    });
-  }
-
-  ngOnInit(): void {
-    this.loadProducts();
+# Fonction pour fixer routes standalone dans app.module.ts ou app-routing.module.ts
+fix_routes() {
+    local file=$1
     
-    this.filteredProducts$ = combineLatest([
-      this.products$,
-      this.searchTerm$,
-      this.minPrice$,
-      this.maxPrice$,
-      this.stockFilter$,
-      this.sortBy$,
-      this.sortOrder$
-    ]).pipe(
-      map(([products, term, minPrice, maxPrice, stockFilter, sortBy, sortOrder]) => {
-        let filtered = products;
-        
-        if (term) {
-          filtered = filtered.filter(p =>
-            p.name.toLowerCase().includes(term.toLowerCase())
-          );
-        }
-        
-        if (minPrice !== null) {
-          filtered = filtered.filter(p => (p.price || 0) >= minPrice);
-        }
-        
-        if (maxPrice !== null) {
-          filtered = filtered.filter(p => (p.price || 0) <= maxPrice);
-        }
-        
-        if (stockFilter === 'rupture') {
-          filtered = filtered.filter(p => (p.quantity || 0) === 0);
-        } else if (stockFilter === 'low') {
-          filtered = filtered.filter(p => (p.quantity || 0) > 0 && (p.quantity || 0) < 10);
-        } else if (stockFilter === 'ok') {
-          filtered = filtered.filter(p => (p.quantity || 0) >= 10);
-        }
-        
-        filtered = filtered.sort((a, b) => {
-          let compareValue = 0;
-          if (sortBy === 'name') {
-            compareValue = a.name.localeCompare(b.name);
-          } else if (sortBy === 'price') {
-            compareValue = (a.price || 0) - (b.price || 0);
-          } else if (sortBy === 'quantity') {
-            compareValue = (a.quantity || 0) - (b.quantity || 0);
-          }
-          return sortOrder === 'asc' ? compareValue : -compareValue;
-        });
-        
-        return filtered;
-      })
-    );
-  }
-
-  loadProducts(): void {
-    this.products$ = this.productsService.getProducts();
-  }
-
-  onSearchChange(term: string): void {
-    this.searchTerm = term;
-    this.searchTerm$.next(term);
-  }
-
-  onMinPriceChange(value: number | null): void {
-    this.minPrice = value;
-    this.minPrice$.next(value);
-  }
-
-  onMaxPriceChange(value: number | null): void {
-    this.maxPrice = value;
-    this.maxPrice$.next(value);
-  }
-
-  onStockFilterChange(filter: 'all' | 'rupture' | 'low' | 'ok'): void {
-    this.stockFilter = filter;
-    this.stockFilter$.next(filter);
-  }
-
-  onSortChange(sortBy: 'name' | 'price' | 'quantity'): void {
-    if (this.sortBy === sortBy) {
-      this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
-    } else {
-      this.sortBy = sortBy;
-      this.sortOrder = 'asc';
-    }
-    this.sortBy$.next(this.sortBy);
-    this.sortOrder$.next(this.sortOrder);
-  }
-
-  clearFilters(): void {
-    this.searchTerm = '';
-    this.searchTerm$.next('');
-    this.minPrice = null;
-    this.minPrice$.next(null);
-    this.maxPrice = null;
-    this.maxPrice$.next(null);
-    this.stockFilter = 'all';
-    this.stockFilter$.next('all');
-    this.sortBy = 'name';
-    this.sortBy$.next('name');
-    this.sortOrder = 'asc';
-    this.sortOrder$.next('asc');
-  }
-
-  onSubmit(): void {
-    if (this.productForm.invalid) {
-      this.errorMessage = 'Veuillez remplir tous les champs obligatoires.';
-      return;
-    }
-    this.isLoading = true;
-    this.errorMessage = '';
-    const formValue = this.productForm.value;
+    if [ ! -f "$file" ]; then
+        return
+    fi
     
-    if (this.isEditing && this.editingId) {
-      this.productsService.updateProduct(this.editingId, formValue).then(() => {
-        this.resetForm();
-        this.loadProducts();
-      }).catch(err => {
-        this.errorMessage = 'Erreur lors de la modification.';
-        console.error(err);
-      }).finally(() => this.isLoading = false);
-    } else {
-      this.productsService.addProduct(formValue).then(() => {
-        this.resetForm();
-        this.loadProducts();
-      }).catch(err => {
-        this.errorMessage = "Erreur lors de l'ajout.";
-        console.error(err);
-      }).finally(() => this.isLoading = false);
-    }
-  }
-
-  editProduct(product: Product): void {
-    this.isEditing = true;
-    this.editingId = product.id || null;
-    this.productForm.patchValue(product);
-    this.showForm = true;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  deleteProduct(id: string, name: string): void {
-    if (confirm(`Supprimer le produit "${name}" ?`)) {
-      this.isLoading = true;
-      this.productsService.deleteProduct(id).then(() => {
-        this.loadProducts();
-      }).catch(err => {
-        this.errorMessage = 'Erreur lors de la suppression.';
-        console.error(err);
-      }).finally(() => this.isLoading = false);
-    }
-  }
-
-  resetForm(): void {
-    this.productForm.reset({ price: 0, quantity: 0 });
-    this.isEditing = false;
-    this.editingId = null;
-    this.errorMessage = '';
-    this.showForm = false;
-  }
-
-  toggleForm(): void {
-    this.showForm = !this.showForm;
-    if (!this.showForm) {
-      this.resetForm();
-    }
-  }
-
-  printList(): void {
-    console.log('🖨️ printList() appelée');
+    echo "Fix routes dans $file..." | tee -a "$LOG_FILE"
     
-    // Utilise take(1) pour obtenir snapshot sans souscrire indéfiniment
-    this.filteredProducts$.pipe(take(1)).subscribe(products => {
-      console.log(`📦 ${products.length} produits filtrés à imprimer`);
-      
-      if (products.length === 0) {
-        alert('Aucun produit à imprimer (liste vide après filtres).');
-        return;
-      }
-      
-      this.generatePrintHTML(products);
-    });
-  }
-
-  generatePrintHTML(products: Product[]): void {
-    console.log('📄 Génération HTML impression...');
+    # Remplace route Entry Voucher : component: EntryVoucherComponent -> loadComponent
+    sed -i '' "s|{ path: 'entry-voucher', component: EntryVoucherComponent }|{ path: 'entry-voucher', loadComponent: () => import('./components/entry-voucher/entry-voucher.component').then(m => m.EntryVoucherComponent) }|" "$file"
     
-    const printWindow = window.open("", "_blank", "width=900,height=700");
+    # Supprime import EntryVoucherComponent si présent
+    sed -i '' '/import.*EntryVoucherComponent.*from/d' "$file"
     
-    if (!printWindow) {
-      alert("❌ Popup bloquée ! Autorisez les popups pour ce site.");
-      return;
-    }
-
-    const today = new Date().toLocaleDateString("fr-FR", {
-      year: "numeric", month: "long", day: "numeric",
-      hour: "2-digit", minute: "2-digit"
-    });
-
-    const totalProducts = products.length;
-    const totalValue = products.reduce((sum, p) => sum + ((p.price || 0) * (p.quantity || 0)), 0);
-    const totalQuantity = products.reduce((sum, p) => sum + (p.quantity || 0), 0);
-    const avgPrice = totalProducts > 0 ? products.reduce((sum, p) => sum + (p.price || 0), 0) / totalProducts : 0;
-    const rupture = products.filter(p => (p.quantity || 0) === 0).length;
-    const stockBas = products.filter(p => (p.quantity || 0) > 0 && (p.quantity || 0) < 10).length;
-    const stockOk = products.filter(p => (p.quantity || 0) >= 10).length;
-
-    const filters: string[] = [];
-    if (this.searchTerm) filters.push(`Recherche: "${this.searchTerm}"`);
-    if (this.minPrice !== null) filters.push(`Prix Min: ${this.minPrice} DT`);
-    if (this.maxPrice !== null) filters.push(`Prix Max: ${this.maxPrice} DT`);
-    if (this.stockFilter !== "all") {
-      const labels: any = { rupture: "En Rupture (0)", low: "Stock Bas (< 10)", ok: "Stock OK (≥ 10)" };
-      filters.push(`Stock: ${labels[this.stockFilter]}`);
-    }
-    const sortLabels: any = { name: "Nom", price: "Prix", quantity: "Quantité" };
-    filters.push(`Tri: ${sortLabels[this.sortBy]} (${this.sortOrder === "asc" ? "↑" : "↓"})`);
-
-    const rows = products.map((p, i) => {
-      const badgeClass = (p.quantity || 0) === 0 ? "red" : (p.quantity || 0) < 10 ? "yellow" : "green";
-      return `
-        <tr>
-          <td>${i + 1}</td>
-          <td>${p.name || "N/A"}</td>
-          <td>${(p.price || 0).toFixed(2)} DT</td>
-          <td><span class="badge badge-${badgeClass}">${p.quantity || 0}</span></td>
-          <td>${((p.price || 0) * (p.quantity || 0)).toFixed(2)} DT</td>
-          <td>${p.description || "-"}</td>
-        </tr>
-      `;
-    }).join("");
-
-    const html = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <title>Liste Produits - ${today}</title>
-        <style>
-          @page { margin: 15mm; size: A4 portrait; }
-          body { font-family: Arial, sans-serif; margin: 0; padding: 15px; font-size: 10pt; }
-          .header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #2563eb; padding-bottom: 10px; }
-          .header h1 { font-size: 20pt; color: #2563eb; margin: 0 0 5px 0; }
-          .header p { font-size: 9pt; color: #666; margin: 0; }
-          .filters { background: #f3f4f6; padding: 8px; margin-bottom: 12px; border-left: 3px solid #2563eb; }
-          .filters h3 { font-size: 11pt; margin: 0 0 5px 0; }
-          .filters ul { list-style: none; padding: 0; margin: 0; }
-          .filters li { font-size: 9pt; margin: 2px 0; }
-          .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; }
-          .stat { background: #f9fafb; border: 1px solid #e5e7eb; padding: 8px; text-align: center; }
-          .stat .label { font-size: 8pt; color: #666; }
-          .stat .value { font-size: 14pt; font-weight: bold; color: #2563eb; }
-          table { width: 100%; border-collapse: collapse; }
-          thead { background: #2563eb; color: white; }
-          th, td { padding: 6px 8px; text-align: left; border: 1px solid #ddd; font-size: 9pt; }
-          tbody tr:nth-child(even) { background: #f9fafb; }
-          tfoot { background: #f3f4f6; font-weight: bold; }
-          .badge { padding: 2px 6px; border-radius: 3px; font-size: 8pt; font-weight: bold; }
-          .badge-red { background: #fee2e2; color: #991b1b; }
-          .badge-yellow { background: #fef3c7; color: #92400e; }
-          .badge-green { background: #d1fae5; color: #065f46; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>📦 Gestion de Stock - Liste Produits</h1>
-          <p>Date d'impression : ${today}</p>
-        </div>
-        <div class="filters">
-          <h3>Filtres Appliqués</h3>
-          <ul>${filters.map(f => `<li>• ${f}</li>`).join("")}</ul>
-        </div>
-        <div class="stats">
-          <div class="stat"><div class="label">Total Produits</div><div class="value">${totalProducts}</div></div>
-          <div class="stat"><div class="label">Valeur Stock</div><div class="value">${totalValue.toFixed(2)} DT</div></div>
-          <div class="stat"><div class="label">Quantité Totale</div><div class="value">${totalQuantity}</div></div>
-          <div class="stat"><div class="label">Prix Moyen</div><div class="value">${avgPrice.toFixed(2)} DT</div></div>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th style="width: 5%">#</th>
-              <th style="width: 25%">Nom</th>
-              <th style="width: 12%">Prix Unit.</th>
-              <th style="width: 10%">Stock</th>
-              <th style="width: 13%">Valeur</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-          <tfoot>
-            <tr>
-              <td colspan="2">TOTAL (${totalProducts} produits)</td>
-              <td>-</td>
-              <td>${totalQuantity}</td>
-              <td>${totalValue.toFixed(2)} DT</td>
-              <td>Rupture: ${rupture} | Bas: ${stockBas} | OK: ${stockOk}</td>
-            </tr>
-          </tfoot>
-        </table>
-      </body>
-      </html>
-    `;
-
-    printWindow.document.write(html);
-    printWindow.document.close();
-    printWindow.focus();
-    
-    setTimeout(() => {
-      printWindow.print();
-    }, 500);
-    
-    console.log('✅ HTML écrit dans popup, impression lancée');
-  }
-
-  printItem(item: any): void {
-    const printWindow = window.open("", "_blank", "width=800,height=600");
-    if (!printWindow) return;
-
-    const html = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <title>Fiche Produit</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 20px; }
-          h1 { text-align: center; border-bottom: 2px solid #000; }
-          table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-          th, td { padding: 8px; border: 1px solid #ddd; }
-          th { background: #f3f4f6; }
-        </style>
-      </head>
-      <body>
-        <h1>Fiche Produit</h1>
-        <table>
-          <tr><th>Nom</th><td>${item.name || 'N/A'}</td></tr>
-          <tr><th>Prix</th><td>${item.price || 0} DT</td></tr>
-          <tr><th>Quantité</th><td>${item.quantity || 0}</td></tr>
-          <tr><th>Description</th><td>${item.description || 'N/A'}</td></tr>
-        </table>
-      </body>
-      </html>
-    `;
-    
-    printWindow.document.write(html);
-    printWindow.document.close();
-    setTimeout(() => {
-      printWindow.print();
-      printWindow.close();
-    }, 250);
-  }
+    echo "✅ Route Entry Voucher corrigée (loadComponent lazy)" | tee -a "$LOG_FILE"
 }
-EOFTS
 
-echo "✅ products.component.ts régénéré" | tee -a "$LOG_FILE"
+# Fix dans app.module.ts
+if grep -q "EntryVoucherComponent" "$APP_MODULE"; then
+    fix_routes "$APP_MODULE"
+fi
+
+# Fix dans app-routing.module.ts si existe
+if [ -f "$APP_ROUTING" ] && grep -q "EntryVoucherComponent" "$APP_ROUTING"; then
+    fix_routes "$APP_ROUTING"
+fi
 
 # Validation
 if command -v ng &> /dev/null; then
@@ -430,32 +50,27 @@ if command -v ng &> /dev/null; then
     npx tsc --noEmit 2>&1 | tee -a "$LOG_FILE"
     if [ $? -eq 0 ]; then
         echo "✅ Compilation OK" | tee -a "$LOG_FILE"
+    else
+        echo "⚠️ Erreurs TS (vérifiez logs)" | tee -a "$LOG_FILE"
     fi
 fi
 
 echo ""
 echo "=========================================="
-echo "  ✅ Products Component Régénéré"
+echo "  ✅ Fix Route Entry Voucher Terminé"
 echo "=========================================="
 echo "Changements :"
-echo "  - Méthode printList() avec console.log debug"
-echo "  - Utilise take(1) pour snapshot propre"
-echo "  - Alert si liste vide ou popup bloquée"
-echo "  - Import 'take' depuis rxjs/operators ajouté"
+echo "  - Route Entry Voucher : component -> loadComponent (lazy)"
+echo "  - Import EntryVoucherComponent supprimé"
+echo ""
+echo "Route avant :"
+echo "  { path: 'entry-voucher', component: EntryVoucherComponent }"
+echo ""
+echo "Route après :"
+echo "  { path: 'entry-voucher', loadComponent: () => import(...) }"
 echo ""
 echo "Test :"
-echo "  1. STOP ng serve (Ctrl+C)"
-echo "  2. ng serve (restart obligatoire)"
-echo "  3. /products → F12 Console ouverte"
-echo "  4. Click 'Imprimer Liste'"
-echo "  5. Vérifiez console logs :"
-echo "     🖨️ printList() appelée"
-echo "     📦 X produits filtrés à imprimer"
-echo "     📄 Génération HTML impression..."
-echo "     ✅ HTML écrit dans popup"
-echo ""
-echo "Si aucun log → Bouton HTML ne lie pas printList()"
-echo "Si logs mais pas popup → Autorisez popups"
+echo "  1. ng serve (restart)"
+echo "  2. /entry-voucher → Doit charger sans erreurs"
 echo ""
 echo "Logs : $LOG_FILE"
-echo "Revert : cp *.backup.regen *"
