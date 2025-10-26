@@ -1,7 +1,0 @@
-Wed Oct 22 14:39:59 CET 2025: Implémentation Purchase Order (Bon Commande) - CRUD multi-produits...
-GENERATED: src/app/models/purchase-order.ts (PurchaseOrder avec orderNumber, status partial/received)
-GENERATED: src/app/services/purchase-order.service.ts (CRUD + auto-status partial/received + generateOrderNumber)
-GENERATED: src/app/components/purchase-order/purchase-order.component.ts (FormArray + orderNumber auto + validation dates + status)
-GENERATED: src/app/components/purchase-order/purchase-order.component.html (Form + accordion + badges status + qté reçue colorée)
-GENERATED: src/app/components/purchase-order/purchase-order.component.scss
-TS OK!

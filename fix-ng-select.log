@@ -1,9 +1,0 @@
-Wed Oct 22 15:22:07 CET 2025: Fix ng-select errors...
-✅ Fixed HTML: src/app/components/entry-voucher/entry-voucher.component.html
-✅ Fixed HTML: src/app/components/exit-voucher/exit-voucher.component.html
-✅ Fixed HTML: src/app/components/purchase-order/purchase-order.component.html
-✅ Fixed HTML: src/app/components/devis/devis.component.html
-✅ Fixed TS imports: src/app/components/entry-voucher/entry-voucher.component.ts
-✅ Fixed TS imports: src/app/components/exit-voucher/exit-voucher.component.ts
-✅ Fixed TS imports: src/app/components/purchase-order/purchase-order.component.ts
-✅ Fixed TS imports: src/app/components/devis/devis.component.ts

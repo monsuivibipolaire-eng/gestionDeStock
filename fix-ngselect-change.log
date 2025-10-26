@@ -1,8 +1,0 @@
-Wed Oct 22 15:31:22 CET 2025: Fix ng-select change event...
-Backups créés
-✅ Removed (change) event from suppliers HTML
-✅ Removed (change) event from customers HTML
-✅ Suppliers TS réécrit (getter/setter selectedSupplierId)
-✅ Customers TS réécrit (getter/setter selectedCustomerId)
-Validation...
-✅ TS OK!

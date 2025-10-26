@@ -1,142 +1,309 @@
 #!/bin/bash
 
-# FIX DÉFINITIF - Deploy correct avec vérification base-href
-# Usage: ./deploy-correct.sh
+# Script pour ajouter la mise à jour des quantités de produits
+# lors de la création/modification des bons d'entrée et de sortie
 
-echo "=== DEPLOY GITHUB PAGES - FIX DÉFINITIF ==="
+echo "=== Mise à jour des services de bons d'entrée/sortie ==="
 
-REPO_NAME="gestionDeStock"
-USERNAME="monsuivibipolaire-eng"
+# 1. Mise à jour du service entry-vouchers.service.ts
+cat > ./src/app/services/entry-vouchers.service.ts << 'EOF'
+import { Injectable } from '@angular/core';
+import { 
+  Firestore, 
+  collection, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  doc, 
+  collectionData, 
+  query, 
+  orderBy, 
+  Query, 
+  Timestamp,
+  getDoc,
+  writeBatch
+} from '@angular/fire/firestore';
+import { Observable } from 'rxjs';
+import { EntryVoucher } from '../models/entry-voucher';
 
-# 1. Nettoyer complètement dist
-echo "1. Nettoyage complet dist..."
-rm -rf dist/
+@Injectable({
+  providedIn: 'root'
+})
+export class EntryVouchersService {
+  constructor(private firestore: Firestore) {}
 
-# 2. Build avec base-href
-echo "2. Build avec base-href..."
-ng build --configuration production --base-href="/$REPO_NAME/"
+  getEntryVouchers(): Observable<EntryVoucher[]> {
+    const vouchersRef = collection(this.firestore, 'entryVouchers');
+    const q: Query = query(vouchersRef, orderBy('date', 'desc'));
+    return collectionData(q, { idField: 'id' }) as Observable<EntryVoucher[]>;
+  }
 
-if [ $? -ne 0 ]; then
-    echo "❌ Build failed"
-    exit 1
-fi
+  async addEntryVoucher(voucher: Omit<EntryVoucher, 'id' | 'createdAt'>): Promise<void> {
+    const vouchersRef = collection(this.firestore, 'entryVouchers');
+    const batch = writeBatch(this.firestore);
+    
+    // Ajouter le bon d'entrée
+    const voucherDocRef = doc(vouchersRef);
+    batch.set(voucherDocRef, { ...voucher, createdAt: Timestamp.now() });
+    
+    // Mettre à jour les quantités des produits (AJOUTER)
+    for (const product of voucher.products) {
+      const productRef = doc(this.firestore, 'products', product.productId);
+      const productSnap = await getDoc(productRef);
+      
+      if (productSnap.exists()) {
+        const currentQuantity = productSnap.data()['quantity'] || 0;
+        batch.update(productRef, { 
+          quantity: currentQuantity + product.quantity 
+        });
+      }
+    }
+    
+    await batch.commit();
+  }
 
-echo "✅ Build réussi"
+  async updateEntryVoucher(id: string, voucher: Partial<EntryVoucher>): Promise<void> {
+    const voucherRef = doc(this.firestore, 'entryVouchers', id);
+    const batch = writeBatch(this.firestore);
+    
+    // Récupérer l'ancien bon pour annuler les anciennes quantités
+    const oldVoucherSnap = await getDoc(voucherRef);
+    if (oldVoucherSnap.exists()) {
+      const oldVoucher = oldVoucherSnap.data() as EntryVoucher;
+      
+      // Annuler les anciennes quantités
+      if (oldVoucher.products) {
+        for (const oldProduct of oldVoucher.products) {
+          const productRef = doc(this.firestore, 'products', oldProduct.productId);
+          const productSnap = await getDoc(productRef);
+          
+          if (productSnap.exists()) {
+            const currentQuantity = productSnap.data()['quantity'] || 0;
+            batch.update(productRef, { 
+              quantity: currentQuantity - oldProduct.quantity 
+            });
+          }
+        }
+      }
+      
+      // Ajouter les nouvelles quantités
+      if (voucher.products) {
+        for (const newProduct of voucher.products) {
+          const productRef = doc(this.firestore, 'products', newProduct.productId);
+          const productSnap = await getDoc(productRef);
+          
+          if (productSnap.exists()) {
+            const currentQuantity = productSnap.data()['quantity'] || 0;
+            batch.update(productRef, { 
+              quantity: currentQuantity + newProduct.quantity 
+            });
+          }
+        }
+      }
+    }
+    
+    // Mettre à jour le bon
+    batch.update(voucherRef, voucher as any);
+    
+    await batch.commit();
+  }
 
-# 3. Trouver le BON dossier avec index.html
+  async deleteEntryVoucher(id: string): Promise<void> {
+    const voucherRef = doc(this.firestore, 'entryVouchers', id);
+    const batch = writeBatch(this.firestore);
+    
+    // Récupérer le bon pour annuler les quantités
+    const voucherSnap = await getDoc(voucherRef);
+    if (voucherSnap.exists()) {
+      const voucher = voucherSnap.data() as EntryVoucher;
+      
+      // Annuler les quantités
+      if (voucher.products) {
+        for (const product of voucher.products) {
+          const productRef = doc(this.firestore, 'products', product.productId);
+          const productSnap = await getDoc(productRef);
+          
+          if (productSnap.exists()) {
+            const currentQuantity = productSnap.data()['quantity'] || 0;
+            batch.update(productRef, { 
+              quantity: Math.max(0, currentQuantity - product.quantity)
+            });
+          }
+        }
+      }
+    }
+    
+    // Supprimer le bon
+    batch.delete(voucherRef);
+    
+    await batch.commit();
+  }
+
+  generateVoucherNumber(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `ENT-${year}${month}${day}-${random}`;
+  }
+}
+EOF
+
+echo "✓ Service entry-vouchers.service.ts mis à jour"
+
+# 2. Mise à jour du service exit-vouchers.service.ts
+cat > ./src/app/services/exit-vouchers.service.ts << 'EOF'
+import { Injectable } from '@angular/core';
+import { 
+  Firestore, 
+  collection, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  doc, 
+  collectionData, 
+  query, 
+  orderBy, 
+  Query, 
+  Timestamp,
+  getDoc,
+  writeBatch
+} from '@angular/fire/firestore';
+import { Observable } from 'rxjs';
+import { ExitVoucher } from '../models/exit-voucher';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ExitVouchersService {
+  constructor(private firestore: Firestore) {}
+
+  getExitVouchers(): Observable<ExitVoucher[]> {
+    const vouchersRef = collection(this.firestore, 'exitVouchers');
+    const q: Query = query(vouchersRef, orderBy('date', 'desc'));
+    return collectionData(q, { idField: 'id' }) as Observable<ExitVoucher[]>;
+  }
+
+  async addExitVoucher(voucher: Omit<ExitVoucher, 'id' | 'createdAt'>): Promise<void> {
+    const vouchersRef = collection(this.firestore, 'exitVouchers');
+    const batch = writeBatch(this.firestore);
+    
+    // Ajouter le bon de sortie
+    const voucherDocRef = doc(vouchersRef);
+    batch.set(voucherDocRef, { ...voucher, createdAt: Timestamp.now() });
+    
+    // Mettre à jour les quantités des produits (SOUSTRAIRE)
+    for (const product of voucher.products) {
+      const productRef = doc(this.firestore, 'products', product.productId);
+      const productSnap = await getDoc(productRef);
+      
+      if (productSnap.exists()) {
+        const currentQuantity = productSnap.data()['quantity'] || 0;
+        const newQuantity = Math.max(0, currentQuantity - product.quantity);
+        batch.update(productRef, { quantity: newQuantity });
+      }
+    }
+    
+    await batch.commit();
+  }
+
+  async updateExitVoucher(id: string, voucher: Partial<ExitVoucher>): Promise<void> {
+    const voucherRef = doc(this.firestore, 'exitVouchers', id);
+    const batch = writeBatch(this.firestore);
+    
+    // Récupérer l'ancien bon pour annuler les anciennes quantités
+    const oldVoucherSnap = await getDoc(voucherRef);
+    if (oldVoucherSnap.exists()) {
+      const oldVoucher = oldVoucherSnap.data() as ExitVoucher;
+      
+      // Annuler les anciennes quantités (ré-ajouter)
+      if (oldVoucher.products) {
+        for (const oldProduct of oldVoucher.products) {
+          const productRef = doc(this.firestore, 'products', oldProduct.productId);
+          const productSnap = await getDoc(productRef);
+          
+          if (productSnap.exists()) {
+            const currentQuantity = productSnap.data()['quantity'] || 0;
+            batch.update(productRef, { 
+              quantity: currentQuantity + oldProduct.quantity 
+            });
+          }
+        }
+      }
+      
+      // Appliquer les nouvelles quantités (soustraire)
+      if (voucher.products) {
+        for (const newProduct of voucher.products) {
+          const productRef = doc(this.firestore, 'products', newProduct.productId);
+          const productSnap = await getDoc(productRef);
+          
+          if (productSnap.exists()) {
+            const currentQuantity = productSnap.data()['quantity'] || 0;
+            const newQuantity = Math.max(0, currentQuantity - newProduct.quantity);
+            batch.update(productRef, { quantity: newQuantity });
+          }
+        }
+      }
+    }
+    
+    // Mettre à jour le bon
+    batch.update(voucherRef, voucher as any);
+    
+    await batch.commit();
+  }
+
+  async deleteExitVoucher(id: string): Promise<void> {
+    const voucherRef = doc(this.firestore, 'exitVouchers', id);
+    const batch = writeBatch(this.firestore);
+    
+    // Récupérer le bon pour annuler les quantités
+    const voucherSnap = await getDoc(voucherRef);
+    if (voucherSnap.exists()) {
+      const voucher = voucherSnap.data() as ExitVoucher;
+      
+      // Annuler les quantités (ré-ajouter)
+      if (voucher.products) {
+        for (const product of voucher.products) {
+          const productRef = doc(this.firestore, 'products', product.productId);
+          const productSnap = await getDoc(productRef);
+          
+          if (productSnap.exists()) {
+            const currentQuantity = productSnap.data()['quantity'] || 0;
+            batch.update(productRef, { 
+              quantity: currentQuantity + product.quantity
+            });
+          }
+        }
+      }
+    }
+    
+    // Supprimer le bon
+    batch.delete(voucherRef);
+    
+    await batch.commit();
+  }
+
+  generateVoucherNumber(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `SRT-${year}${month}${day}-${random}`;
+  }
+}
+EOF
+
+echo "✓ Service exit-vouchers.service.ts mis à jour"
+
 echo ""
-echo "3. Recherche dossier contenant index.html..."
-
-POSSIBLE_DIRS=(
-    "dist/browser"
-    "dist/gestion-stock-app/browser"
-    "dist/gestion-stock-app"
-    "dist"
-)
-
-DIST_DIR=""
-for dir in "${POSSIBLE_DIRS[@]}"; do
-    if [ -f "$dir/index.html" ]; then
-        DIST_DIR="$dir"
-        echo "✅ Trouvé: $DIST_DIR"
-        break
-    fi
-done
-
-if [ -z "$DIST_DIR" ]; then
-    echo "❌ index.html introuvable dans dist"
-    exit 1
-fi
-
-# 4. VÉRIFICATION CRITIQUE du base-href
+echo "=== Résumé des modifications ==="
+echo "✓ Bons d'entrée: ajoutent automatiquement les quantités au stock"
+echo "✓ Bons de sortie: soustraient automatiquement les quantités du stock"
+echo "✓ Modification de bon: annule puis applique les nouvelles quantités"
+echo "✓ Suppression de bon: annule les modifications de stock"
+echo "✓ Utilisation de transactions Firestore (writeBatch) pour garantir la cohérence"
 echo ""
-echo "4. Vérification base-href dans $DIST_DIR/index.html..."
-BASE_HREF_CONTENT=$(cat "$DIST_DIR/index.html" | grep "base href")
-echo "Contenu: $BASE_HREF_CONTENT"
-
-if echo "$BASE_HREF_CONTENT" | grep -q "href=\"/$REPO_NAME/\""; then
-    echo "✅ Base href CORRECT: /$REPO_NAME/"
-elif echo "$BASE_HREF_CONTENT" | grep -q "href=\"/\""; then
-    echo "❌ ERREUR: Base href est '/' au lieu de '/$REPO_NAME/'"
-    echo ""
-    echo "SOLUTION:"
-    echo "  1. Modifiez angular.json:"
-    echo "     \"configurations\": {"
-    echo "       \"production\": {"
-    echo "         \"baseHref\": \"/$REPO_NAME/\""
-    echo "       }"
-    echo "     }"
-    echo ""
-    echo "  2. Ou utilisez:"
-    echo "     ng build --configuration production --base-href=\"/$REPO_NAME/\""
-    exit 1
-else
-    echo "⚠️ Base href non reconnu: $BASE_HREF_CONTENT"
-    read -p "Continuer quand même ? (y/n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        exit 1
-    fi
-fi
-
-# 5. Copier 404.html et .nojekyll
-cp "$DIST_DIR/index.html" "$DIST_DIR/404.html"
-touch "$DIST_DIR/.nojekyll"
-echo "✅ 404.html et .nojekyll créés"
-
-# 6. Afficher liste fichiers à déployer
-echo ""
-echo "5. Fichiers à déployer:"
-ls -la "$DIST_DIR/" | head -20
-
-# 7. Deploy
-echo ""
-echo "6. Déploiement sur gh-pages..."
-cd "$DIST_DIR"
-
-git init
-git add -A
-git commit -m "Deploy $(date +'%Y-%m-%d %H:%M:%S')"
-git branch -M gh-pages
-
-# Supprimer remote si existe
-git remote remove origin 2>/dev/null
-
-git remote add origin "https://github.com/$USERNAME/$REPO_NAME.git"
-git push -f origin gh-pages
-
-DEPLOY_STATUS=$?
-
-cd - > /dev/null
-
-if [ $DEPLOY_STATUS -eq 0 ]; then
-    echo ""
-    echo "=========================================="
-    echo "  ✅ DÉPLOIEMENT RÉUSSI"
-    echo "=========================================="
-    echo ""
-    echo "URL: https://$USERNAME.github.io/$REPO_NAME/"
-    echo ""
-    echo "ACTIONS:"
-    echo "  1. Attendre 2-3 minutes (GitHub Pages build)"
-    echo "  2. Vérifier: https://github.com/$USERNAME/$REPO_NAME/settings/pages"
-    echo "     Source doit être: gh-pages / (root)"
-    echo "  3. Vider cache navigateur (Ctrl+Shift+R / Cmd+Shift+R)"
-    echo "  4. Visiter URL"
-    echo ""
-    echo "Vérification dans navigateur:"
-    echo "  - F12 (DevTools) → Network"
-    echo "  - Recharger page"
-    echo "  - Vérifier que fichiers JS sont chargés depuis:"
-    echo "    https://$USERNAME.github.io/$REPO_NAME/main-*.js"
-    echo "    (et PAS depuis https://$USERNAME.github.io/main-*.js)"
-else
-    echo ""
-    echo "❌ Déploiement échoué"
-    echo "Essayez manuellement:"
-    echo "  cd $DIST_DIR"
-    echo "  git init && git add -A && git commit -m 'Deploy'"
-    echo "  git branch -M gh-pages"
-    echo "  git remote add origin https://github.com/$USERNAME/$REPO_NAME.git"
-    echo "  git push -f origin gh-pages"
-fi
+echo "Les services utilisent maintenant writeBatch pour garantir que toutes"
+echo "les opérations réussissent ou échouent ensemble (atomicité)."
