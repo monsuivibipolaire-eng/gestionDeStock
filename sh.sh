@@ -1,309 +1,181 @@
 #!/bin/bash
 
-# Script pour ajouter la mise à jour des quantités de produits
-# lors de la création/modification des bons d'entrée et de sortie
+set -e
 
-echo "=== Mise à jour des services de bons d'entrée/sortie ==="
-
-# 1. Mise à jour du service entry-vouchers.service.ts
-cat > ./src/app/services/entry-vouchers.service.ts << 'EOF'
-import { Injectable } from '@angular/core';
-import { 
-  Firestore, 
-  collection, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
-  collectionData, 
-  query, 
-  orderBy, 
-  Query, 
-  Timestamp,
-  getDoc,
-  writeBatch
-} from '@angular/fire/firestore';
-import { Observable } from 'rxjs';
-import { EntryVoucher } from '../models/entry-voucher';
-
-@Injectable({
-  providedIn: 'root'
-})
-export class EntryVouchersService {
-  constructor(private firestore: Firestore) {}
-
-  getEntryVouchers(): Observable<EntryVoucher[]> {
-    const vouchersRef = collection(this.firestore, 'entryVouchers');
-    const q: Query = query(vouchersRef, orderBy('date', 'desc'));
-    return collectionData(q, { idField: 'id' }) as Observable<EntryVoucher[]>;
-  }
-
-  async addEntryVoucher(voucher: Omit<EntryVoucher, 'id' | 'createdAt'>): Promise<void> {
-    const vouchersRef = collection(this.firestore, 'entryVouchers');
-    const batch = writeBatch(this.firestore);
-    
-    // Ajouter le bon d'entrée
-    const voucherDocRef = doc(vouchersRef);
-    batch.set(voucherDocRef, { ...voucher, createdAt: Timestamp.now() });
-    
-    // Mettre à jour les quantités des produits (AJOUTER)
-    for (const product of voucher.products) {
-      const productRef = doc(this.firestore, 'products', product.productId);
-      const productSnap = await getDoc(productRef);
-      
-      if (productSnap.exists()) {
-        const currentQuantity = productSnap.data()['quantity'] || 0;
-        batch.update(productRef, { 
-          quantity: currentQuantity + product.quantity 
-        });
-      }
-    }
-    
-    await batch.commit();
-  }
-
-  async updateEntryVoucher(id: string, voucher: Partial<EntryVoucher>): Promise<void> {
-    const voucherRef = doc(this.firestore, 'entryVouchers', id);
-    const batch = writeBatch(this.firestore);
-    
-    // Récupérer l'ancien bon pour annuler les anciennes quantités
-    const oldVoucherSnap = await getDoc(voucherRef);
-    if (oldVoucherSnap.exists()) {
-      const oldVoucher = oldVoucherSnap.data() as EntryVoucher;
-      
-      // Annuler les anciennes quantités
-      if (oldVoucher.products) {
-        for (const oldProduct of oldVoucher.products) {
-          const productRef = doc(this.firestore, 'products', oldProduct.productId);
-          const productSnap = await getDoc(productRef);
-          
-          if (productSnap.exists()) {
-            const currentQuantity = productSnap.data()['quantity'] || 0;
-            batch.update(productRef, { 
-              quantity: currentQuantity - oldProduct.quantity 
-            });
-          }
-        }
-      }
-      
-      // Ajouter les nouvelles quantités
-      if (voucher.products) {
-        for (const newProduct of voucher.products) {
-          const productRef = doc(this.firestore, 'products', newProduct.productId);
-          const productSnap = await getDoc(productRef);
-          
-          if (productSnap.exists()) {
-            const currentQuantity = productSnap.data()['quantity'] || 0;
-            batch.update(productRef, { 
-              quantity: currentQuantity + newProduct.quantity 
-            });
-          }
-        }
-      }
-    }
-    
-    // Mettre à jour le bon
-    batch.update(voucherRef, voucher as any);
-    
-    await batch.commit();
-  }
-
-  async deleteEntryVoucher(id: string): Promise<void> {
-    const voucherRef = doc(this.firestore, 'entryVouchers', id);
-    const batch = writeBatch(this.firestore);
-    
-    // Récupérer le bon pour annuler les quantités
-    const voucherSnap = await getDoc(voucherRef);
-    if (voucherSnap.exists()) {
-      const voucher = voucherSnap.data() as EntryVoucher;
-      
-      // Annuler les quantités
-      if (voucher.products) {
-        for (const product of voucher.products) {
-          const productRef = doc(this.firestore, 'products', product.productId);
-          const productSnap = await getDoc(productRef);
-          
-          if (productSnap.exists()) {
-            const currentQuantity = productSnap.data()['quantity'] || 0;
-            batch.update(productRef, { 
-              quantity: Math.max(0, currentQuantity - product.quantity)
-            });
-          }
-        }
-      }
-    }
-    
-    // Supprimer le bon
-    batch.delete(voucherRef);
-    
-    await batch.commit();
-  }
-
-  generateVoucherNumber(): string {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    return `ENT-${year}${month}${day}-${random}`;
-  }
-}
-EOF
-
-echo "✓ Service entry-vouchers.service.ts mis à jour"
-
-# 2. Mise à jour du service exit-vouchers.service.ts
-cat > ./src/app/services/exit-vouchers.service.ts << 'EOF'
-import { Injectable } from '@angular/core';
-import { 
-  Firestore, 
-  collection, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
-  collectionData, 
-  query, 
-  orderBy, 
-  Query, 
-  Timestamp,
-  getDoc,
-  writeBatch
-} from '@angular/fire/firestore';
-import { Observable } from 'rxjs';
-import { ExitVoucher } from '../models/exit-voucher';
-
-@Injectable({
-  providedIn: 'root'
-})
-export class ExitVouchersService {
-  constructor(private firestore: Firestore) {}
-
-  getExitVouchers(): Observable<ExitVoucher[]> {
-    const vouchersRef = collection(this.firestore, 'exitVouchers');
-    const q: Query = query(vouchersRef, orderBy('date', 'desc'));
-    return collectionData(q, { idField: 'id' }) as Observable<ExitVoucher[]>;
-  }
-
-  async addExitVoucher(voucher: Omit<ExitVoucher, 'id' | 'createdAt'>): Promise<void> {
-    const vouchersRef = collection(this.firestore, 'exitVouchers');
-    const batch = writeBatch(this.firestore);
-    
-    // Ajouter le bon de sortie
-    const voucherDocRef = doc(vouchersRef);
-    batch.set(voucherDocRef, { ...voucher, createdAt: Timestamp.now() });
-    
-    // Mettre à jour les quantités des produits (SOUSTRAIRE)
-    for (const product of voucher.products) {
-      const productRef = doc(this.firestore, 'products', product.productId);
-      const productSnap = await getDoc(productRef);
-      
-      if (productSnap.exists()) {
-        const currentQuantity = productSnap.data()['quantity'] || 0;
-        const newQuantity = Math.max(0, currentQuantity - product.quantity);
-        batch.update(productRef, { quantity: newQuantity });
-      }
-    }
-    
-    await batch.commit();
-  }
-
-  async updateExitVoucher(id: string, voucher: Partial<ExitVoucher>): Promise<void> {
-    const voucherRef = doc(this.firestore, 'exitVouchers', id);
-    const batch = writeBatch(this.firestore);
-    
-    // Récupérer l'ancien bon pour annuler les anciennes quantités
-    const oldVoucherSnap = await getDoc(voucherRef);
-    if (oldVoucherSnap.exists()) {
-      const oldVoucher = oldVoucherSnap.data() as ExitVoucher;
-      
-      // Annuler les anciennes quantités (ré-ajouter)
-      if (oldVoucher.products) {
-        for (const oldProduct of oldVoucher.products) {
-          const productRef = doc(this.firestore, 'products', oldProduct.productId);
-          const productSnap = await getDoc(productRef);
-          
-          if (productSnap.exists()) {
-            const currentQuantity = productSnap.data()['quantity'] || 0;
-            batch.update(productRef, { 
-              quantity: currentQuantity + oldProduct.quantity 
-            });
-          }
-        }
-      }
-      
-      // Appliquer les nouvelles quantités (soustraire)
-      if (voucher.products) {
-        for (const newProduct of voucher.products) {
-          const productRef = doc(this.firestore, 'products', newProduct.productId);
-          const productSnap = await getDoc(productRef);
-          
-          if (productSnap.exists()) {
-            const currentQuantity = productSnap.data()['quantity'] || 0;
-            const newQuantity = Math.max(0, currentQuantity - newProduct.quantity);
-            batch.update(productRef, { quantity: newQuantity });
-          }
-        }
-      }
-    }
-    
-    // Mettre à jour le bon
-    batch.update(voucherRef, voucher as any);
-    
-    await batch.commit();
-  }
-
-  async deleteExitVoucher(id: string): Promise<void> {
-    const voucherRef = doc(this.firestore, 'exitVouchers', id);
-    const batch = writeBatch(this.firestore);
-    
-    // Récupérer le bon pour annuler les quantités
-    const voucherSnap = await getDoc(voucherRef);
-    if (voucherSnap.exists()) {
-      const voucher = voucherSnap.data() as ExitVoucher;
-      
-      // Annuler les quantités (ré-ajouter)
-      if (voucher.products) {
-        for (const product of voucher.products) {
-          const productRef = doc(this.firestore, 'products', product.productId);
-          const productSnap = await getDoc(productRef);
-          
-          if (productSnap.exists()) {
-            const currentQuantity = productSnap.data()['quantity'] || 0;
-            batch.update(productRef, { 
-              quantity: currentQuantity + product.quantity
-            });
-          }
-        }
-      }
-    }
-    
-    // Supprimer le bon
-    batch.delete(voucherRef);
-    
-    await batch.commit();
-  }
-
-  generateVoucherNumber(): string {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    return `SRT-${year}${month}${day}-${random}`;
-  }
-}
-EOF
-
-echo "✓ Service exit-vouchers.service.ts mis à jour"
-
+echo "🚀 ==================== SCRIPT COMPLET FINAL ===================="
+echo "Cet script corrige TOUS les problèmes du projet en une fois"
+echo "==========================================================="
 echo ""
-echo "=== Résumé des modifications ==="
-echo "✓ Bons d'entrée: ajoutent automatiquement les quantités au stock"
-echo "✓ Bons de sortie: soustraient automatiquement les quantités du stock"
-echo "✓ Modification de bon: annule puis applique les nouvelles quantités"
-echo "✓ Suppression de bon: annule les modifications de stock"
-echo "✓ Utilisation de transactions Firestore (writeBatch) pour garantir la cohérence"
+
+####
+# ÉTAPE 1 : Restauration depuis Git (état propre)
+####
+echo "📦 ÉTAPE 1/5 : Restauration depuis Git..."
+git add -A
+git commit -m "Avant corrections finales" || true
+git checkout HEAD -- src/app/components/entry-voucher/
+git checkout HEAD -- src/app/components/exit-voucher/
+echo "✔️  Fichiers restaurés"
+
+####
+# ÉTAPE 2 : Correction de entry-voucher.component.ts
+####
 echo ""
-echo "Les services utilisent maintenant writeBatch pour garantir que toutes"
-echo "les opérations réussissent ou échouent ensemble (atomicité)."
+echo "🔧 ÉTAPE 2/5 : Correction du composant entry-voucher..."
+
+ENTRY_TS="src/app/components/entry-voucher/entry-voucher.component.ts"
+
+# Ajouter productList
+perl -i -pe '
+  if (/products\$!: Observable<Product\[\]>;/) {
+    $_ .= "  productList: Product[] = [];\n";
+  }
+' "$ENTRY_TS"
+
+# Ajouter subscribe
+perl -i -pe '
+  if (/this\.products\$ = this\.productsService\.getProducts\(\);/) {
+    $_ .= "    this.products\$.subscribe(products => {\n      this.productList = products;\n    });\n";
+  }
+' "$ENTRY_TS"
+
+# Ajouter getProductName et getDescription
+if ! grep -q "getProductName(productId: string): string" "$ENTRY_TS"; then
+  awk '
+    /^export class EntryVoucherComponent/ {in_class=1}
+    in_class && /^}$/ && !added {
+      print "  getProductName(productId: string): string {"
+      print "    const prod = this.productList.find(p => p.id === productId);"
+      print "    return prod?.name || \"Produit inconnu\";"
+      print "  }"
+      print ""
+      print "  getDescription(productId: string): string {"
+      print "    const prod = this.productList.find(p => p.id === productId);"
+      print "    return prod?.description || \"Pas de description\";"
+      print "  }"
+      print ""
+      added=1
+    }
+    {print}
+  ' "$ENTRY_TS" > "${ENTRY_TS}.tmp" && mv "${ENTRY_TS}.tmp" "$ENTRY_TS"
+fi
+
+echo "✔️  entry-voucher.component.ts corrigé"
+
+####
+# ÉTAPE 3 : Correction du template entry-voucher
+####
+echo ""
+echo "🎨 ÉTAPE 3/5 : Correction du template entry-voucher..."
+
+ENTRY_HTML="src/app/components/entry-voucher/entry-voucher.component.html"
+
+# Remplacer entry par voucher
+perl -i -pe '
+  s/entry\?\.products/voucher.products/g;
+  s/entry\?\.totalAmount/voucher.totalAmount/g;
+' "$ENTRY_HTML"
+
+echo "✔️  entry-voucher.component.html corrigé"
+
+####
+# ÉTAPE 4 : Même corrections pour exit-voucher
+####
+echo ""
+echo "🔧 ÉTAPE 4/5 : Correction du composant exit-voucher..."
+
+EXIT_TS="src/app/components/exit-voucher/exit-voucher.component.ts"
+EXIT_HTML="src/app/components/exit-voucher/exit-voucher.component.html"
+
+# Ajouter productList si absent
+if ! grep -q "productList: Product\[\]" "$EXIT_TS"; then
+  perl -i -pe '
+    if (/products\$!: Observable<Product\[\]>;/) {
+      $_ .= "  productList: Product[] = [];\n";
+    }
+  ' "$EXIT_TS"
+fi
+
+# Ajouter subscribe si absent
+if ! grep -q "this.productList = products" "$EXIT_TS"; then
+  perl -i -pe '
+    if (/this\.products\$ = this\.productsService\.getProducts\(\);/) {
+      $_ .= "    this.products\$.subscribe(products => {\n      this.productList = products;\n    });\n";
+    }
+  ' "$EXIT_TS"
+fi
+
+# Ajouter méthodes get si absentes
+if ! grep -q "getProductName(productId: string): string" "$EXIT_TS"; then
+  awk '
+    /^export class ExitVoucherComponent/ {in_class=1}
+    in_class && /^}$/ && !added {
+      print "  getProductName(productId: string): string {"
+      print "    const prod = this.productList.find(p => p.id === productId);"
+      print "    return prod?.name || \"Produit inconnu\";"
+      print "  }"
+      print ""
+      print "  getDescription(productId: string): string {"
+      print "    const prod = this.productList.find(p => p.id === productId);"
+      print "    return prod?.description || \"Pas de description\";"
+      print "  }"
+      print ""
+      added=1
+    }
+    {print}
+  ' "$EXIT_TS" > "${EXIT_TS}.tmp" && mv "${EXIT_TS}.tmp" "$EXIT_TS"
+fi
+
+# Remplacer dans template exit-voucher
+perl -i -pe '
+  s/entry\?\.products/voucher.products/g;
+  s/entry\?\.totalAmount/voucher.totalAmount/g;
+' "$EXIT_HTML"
+
+echo "✔️  exit-voucher corrigé"
+
+####
+# ÉTAPE 5 : Formatage et vérification
+####
+echo ""
+echo "✨ ÉTAPE 5/5 : Formatage et vérification..."
+
+if command -v npx &> /dev/null; then
+  npx prettier --write src/app/components/entry-voucher/ 2>/dev/null || true
+  npx prettier --write src/app/components/exit-voucher/ 2>/dev/null || true
+fi
+
+echo "✔️  Formatage appliqué"
+
+####
+# RÉSUMÉ FINAL
+####
+echo ""
+echo "✅ ==================== RÉSUMÉ FINAL ===================="
+echo ""
+echo "✓ Restauration depuis Git"
+echo "✓ productList ajouté aux deux composants"
+echo "✓ Subscribe products\$ → productList"
+echo "✓ getProductName et getDescription ajoutées"
+echo "✓ entry remplacé par voucher dans les templates"
+echo "✓ Formatage appliqué"
+echo ""
+echo "🚀 PROCHAINES ÉTAPES :"
+echo ""
+echo "1️⃣  Nettoyez le cache :"
+echo "   rm -rf dist .angular node_modules/.cache"
+echo ""
+echo "2️⃣  Relancez l'application :"
+echo "   ng serve"
+echo ""
+echo "3️⃣  Videz Firestore :"
+echo "   - Allez dans Firebase Console"
+echo "   - Cloud Firestore > Supprimer tous les documents dans 'entryVouchers'"
+echo "   - Supprimer tous les documents dans 'exitVouchers'"
+echo ""
+echo "4️⃣  Testez l'application :"
+echo "   - Créez un nouveau Bon d'Entrée avec des produits"
+echo "   - Cliquez sur 'Détail' pour voir :"
+echo "     ID | Nom/Description du Produit | Quantité | Prix Unit"
+echo ""
+echo "✅ ================================================"

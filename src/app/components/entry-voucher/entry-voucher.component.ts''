@@ -22,10 +22,11 @@ import { Supplier } from '../../models/supplier';
   standalone: true,
 })
 export class EntryVoucherComponent implements OnInit {
+  productDescriptionMap: Map<string, string> = new Map();
   vouchers$!: Observable<EntryVoucher[]>;
   filteredVouchers$!: Observable<EntryVoucher[]>;
   products$!: Observable<Product[]>;
-  productList: Product[] = [];
+  productList: Product[] = []; // Cache synchrone pour accès rapide
   suppliers$!: Observable<Supplier[]>;
   voucherForm: FormGroup;
   isLoading = false;
@@ -73,9 +74,6 @@ export class EntryVoucherComponent implements OnInit {
   ngOnInit(): void {
     this.loadVouchers();
     this.products$ = this.productsService.getProducts();
-    this.products$.subscribe((products) => {
-      this.productList = products;
-    });
     this.suppliers$ = this.suppliersService.getSuppliers();
 
     this.filteredVouchers$ = combineLatest([
@@ -600,5 +598,24 @@ export class EntryVoucherComponent implements OnInit {
         printWindow.close();
       }, 250);
     });
+  }
+
+  private loadProductsAndMapDescriptions(): void {
+    this.products$.pipe(take(1)).subscribe((products) => {
+      products.forEach((p) => {
+        if (p.id) {
+          this.productDescriptionMap.set(p.id, p.description || 'Sans description');
+        }
+      });
+    });
+  }
+
+  getDescription(productId: string): string {
+    let desc = 'Pas de description';
+    if (this.productList && Array.isArray(this.productList)) {
+      const prod = this.productList.find((p) => p.id === productId);
+      if (prod && prod.description) desc = prod.description;
+    }
+    return desc;
   }
 }

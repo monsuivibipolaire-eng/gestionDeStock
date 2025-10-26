@@ -7,7 +7,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Timestamp } from '@angular/fire/firestore';
 import { NgSelectModule } from '@ng-select/ng-select';
-import { EntryVoucher, ProductLine } from '../../models/entry-voucher';
+import { EntryVoucher, ProductLine } from "../../models/entry-voucher";
 import { EntryVouchersService } from '../../services/entry-vouchers.service';
 import { ProductsService } from '../../services/products.service';
 import { SuppliersService } from '../../services/suppliers.service';
@@ -19,13 +19,12 @@ import { Supplier } from '../../models/supplier';
   templateUrl: './entry-voucher.component.html',
   styleUrls: ['./entry-voucher.component.scss'],
   imports: [ReactiveFormsModule, NgSelectModule, CommonModule, FormsModule],
-  standalone: true,
+  standalone: true
 })
 export class EntryVoucherComponent implements OnInit {
   vouchers$!: Observable<EntryVoucher[]>;
   filteredVouchers$!: Observable<EntryVoucher[]>;
   products$!: Observable<Product[]>;
-  productList: Product[] = [];
   suppliers$!: Observable<Supplier[]>;
   voucherForm: FormGroup;
   isLoading = false;
@@ -34,7 +33,7 @@ export class EntryVoucherComponent implements OnInit {
   errorMessage = '';
   showForm = false;
   expandedVoucherId: string | null = null;
-
+  
   // Filtres
   searchTerm = '';
   searchTerm$ = new BehaviorSubject<string>('');
@@ -58,7 +57,7 @@ export class EntryVoucherComponent implements OnInit {
     private productsService: ProductsService,
     private suppliersService: SuppliersService,
     private fb: FormBuilder,
-    private router: Router,
+    private router: Router
   ) {
     const today = new Date().toISOString().split('T')[0];
     this.voucherForm = this.fb.group({
@@ -66,18 +65,15 @@ export class EntryVoucherComponent implements OnInit {
       date: [today, Validators.required],
       supplier: ['', Validators.required],
       products: this.fb.array([this.createProductLine()]),
-      notes: [''],
+      notes: ['']
     });
   }
 
   ngOnInit(): void {
     this.loadVouchers();
     this.products$ = this.productsService.getProducts();
-    this.products$.subscribe((products) => {
-      this.productList = products;
-    });
     this.suppliers$ = this.suppliersService.getSuppliers();
-
+    
     this.filteredVouchers$ = combineLatest([
       this.vouchers$,
       this.searchTerm$,
@@ -87,77 +83,69 @@ export class EntryVoucherComponent implements OnInit {
       this.minAmount$,
       this.maxAmount$,
       this.sortBy$,
-      this.sortOrder$,
+      this.sortOrder$
     ]).pipe(
-      map(
-        ([vouchers, term, supplier, dateFrom, dateTo, minAmount, maxAmount, sortBy, sortOrder]) => {
-          let filtered = vouchers;
-
-          // Recherche numéro bon
-          if (term) {
-            filtered = filtered.filter((v) =>
-              v.voucherNumber.toLowerCase().includes(term.toLowerCase()),
-            );
-          }
-
-          // Filtre fournisseur
-          if (supplier) {
-            filtered = filtered.filter((v) => v.supplier === supplier);
-          }
-
-          // Filtre date from
-          if (dateFrom) {
-            const fromDate = new Date(dateFrom);
-            filtered = filtered.filter((v) => {
-              const vDate = v.date instanceof Timestamp ? v.date.toDate() : new Date(v.date);
-              return vDate >= fromDate;
-            });
-          }
-
-          // Filtre date to
-          if (dateTo) {
-            const toDate = new Date(dateTo);
-            toDate.setHours(23, 59, 59);
-            filtered = filtered.filter((v) => {
-              const vDate = v.date instanceof Timestamp ? v.date.toDate() : new Date(v.date);
-              return vDate <= toDate;
-            });
-          }
-
-          // Filtre montant min
-          if (minAmount !== null) {
-            filtered = filtered.filter((v) => (v.totalAmount || 0) >= minAmount);
-          }
-
-          // Filtre montant max
-          if (maxAmount !== null) {
-            filtered = filtered.filter((v) => (v.totalAmount || 0) <= maxAmount);
-          }
-
-          // Tri
-          filtered = filtered.sort((a, b) => {
-            let compareValue = 0;
-            if (sortBy === 'date') {
-              const dateA =
-                a.date instanceof Timestamp
-                  ? a.date.toDate().getTime()
-                  : new Date(a.date).getTime();
-              const dateB =
-                b.date instanceof Timestamp
-                  ? b.date.toDate().getTime()
-                  : new Date(b.date).getTime();
-              compareValue = dateA - dateB;
-            } else if (sortBy === 'supplier') {
-              compareValue = a.supplier.localeCompare(b.supplier);
-            } else if (sortBy === 'amount') {
-              compareValue = (a.totalAmount || 0) - (b.totalAmount || 0);
-            }
-            return sortOrder === 'asc' ? compareValue : -compareValue;
+      map(([vouchers, term, supplier, dateFrom, dateTo, minAmount, maxAmount, sortBy, sortOrder]) => {
+        let filtered = vouchers;
+        
+        // Recherche numéro bon
+        if (term) {
+          filtered = filtered.filter(v =>
+            v.voucherNumber.toLowerCase().includes(term.toLowerCase())
+          );
+        }
+        
+        // Filtre fournisseur
+        if (supplier) {
+          filtered = filtered.filter(v => v.supplier === supplier);
+        }
+        
+        // Filtre date from
+        if (dateFrom) {
+          const fromDate = new Date(dateFrom);
+          filtered = filtered.filter(v => {
+            const vDate = v.date instanceof Timestamp ? v.date.toDate() : new Date(v.date);
+            return vDate >= fromDate;
           });
-
-          return filtered;
-        },
-      ),
+        }
+        
+        // Filtre date to
+        if (dateTo) {
+          const toDate = new Date(dateTo);
+          toDate.setHours(23, 59, 59);
+          filtered = filtered.filter(v => {
+            const vDate = v.date instanceof Timestamp ? v.date.toDate() : new Date(v.date);
+            return vDate <= toDate;
+          });
+        }
+        
+        // Filtre montant min
+        if (minAmount !== null) {
+          filtered = filtered.filter(v => (v.totalAmount || 0) >= minAmount);
+        }
+        
+        // Filtre montant max
+        if (maxAmount !== null) {
+          filtered = filtered.filter(v => (v.totalAmount || 0) <= maxAmount);
+        }
+        
+        // Tri
+        filtered = filtered.sort((a, b) => {
+          let compareValue = 0;
+          if (sortBy === 'date') {
+            const dateA = a.date instanceof Timestamp ? a.date.toDate().getTime() : new Date(a.date).getTime();
+            const dateB = b.date instanceof Timestamp ? b.date.toDate().getTime() : new Date(b.date).getTime();
+            compareValue = dateA - dateB;
+          } else if (sortBy === 'supplier') {
+            compareValue = a.supplier.localeCompare(b.supplier);
+          } else if (sortBy === 'amount') {
+            compareValue = (a.totalAmount || 0) - (b.totalAmount || 0);
+          }
+          return sortOrder === 'asc' ? compareValue : -compareValue;
+        });
+        
+        return filtered;
+      })
     );
   }
 
@@ -169,7 +157,7 @@ export class EntryVoucherComponent implements OnInit {
     return this.fb.group({
       productId: ['', Validators.required],
       quantity: [1, [Validators.required, Validators.min(1)]],
-      unitPrice: [0, [Validators.required, Validators.min(0.01)]],
+      unitPrice: [0, [Validators.required, Validators.min(0.01)]]
     });
   }
 
@@ -191,7 +179,7 @@ export class EntryVoucherComponent implements OnInit {
   calculateTotal(): number {
     return this.productsFormArray.controls.reduce((sum, control) => {
       const line = control.value;
-      return sum + (line.quantity || 0) * (line.unitPrice || 0);
+      return sum + ((line.quantity || 0) * (line.unitPrice || 0));
     }, 0);
   }
 
@@ -265,50 +253,42 @@ export class EntryVoucherComponent implements OnInit {
       this.errorMessage = 'Veuillez remplir tous les champs obligatoires.';
       return;
     }
-
+    
     this.isLoading = true;
     this.errorMessage = '';
     const formValue = this.voucherForm.value;
-
+    
     const productsWithNames: ProductLine[] = formValue.products.map((p: any) => ({
       ...p,
       productName: this.getProductName(p.productId),
-      subtotal: p.quantity * p.unitPrice,
+      subtotal: p.quantity * p.unitPrice
     }));
-
+    
     const voucherData = {
       voucherNumber: formValue.voucherNumber,
       date: Timestamp.fromDate(new Date(formValue.date)),
       supplier: formValue.supplier,
       products: productsWithNames,
       totalAmount: this.calculateTotal(),
-      notes: formValue.notes,
+      notes: formValue.notes
     };
-
+    
     if (this.isEditing && this.editingId) {
-      this.vouchersService
-        .updateEntryVoucher(this.editingId, voucherData)
-        .then(() => {
-          this.resetForm();
-          this.loadVouchers();
-        })
-        .catch((err: any) => {
-          this.errorMessage = 'Erreur lors de la modification.';
-          console.error(err);
-        })
-        .finally(() => (this.isLoading = false));
+      this.vouchersService.updateEntryVoucher(this.editingId, voucherData).then(() => {
+        this.resetForm();
+        this.loadVouchers();
+      }).catch((err: any) => {
+        this.errorMessage = 'Erreur lors de la modification.';
+        console.error(err);
+      }).finally(() => this.isLoading = false);
     } else {
-      this.vouchersService
-        .addEntryVoucher(voucherData)
-        .then(() => {
-          this.resetForm();
-          this.loadVouchers();
-        })
-        .catch((err: any) => {
-          this.errorMessage = "Erreur lors de l'ajout.";
-          console.error(err);
-        })
-        .finally(() => (this.isLoading = false));
+      this.vouchersService.addEntryVoucher(voucherData).then(() => {
+        this.resetForm();
+        this.loadVouchers();
+      }).catch((err: any) => {
+        this.errorMessage = "Erreur lors de l'ajout.";
+        console.error(err);
+      }).finally(() => this.isLoading = false);
     }
   }
 
@@ -316,25 +296,23 @@ export class EntryVoucherComponent implements OnInit {
     this.isEditing = true;
     this.editingId = voucher.id || null;
     const dateStr = (voucher.date as Timestamp).toDate().toISOString().split('T')[0];
-
+    
     this.productsFormArray.clear();
-    voucher.products.forEach((p) => {
-      this.productsFormArray.push(
-        this.fb.group({
-          productId: [p.productId, Validators.required],
-          quantity: [p.quantity, [Validators.required, Validators.min(1)]],
-          unitPrice: [p.unitPrice, [Validators.required, Validators.min(0.01)]],
-        }),
-      );
+    voucher.products.forEach(p => {
+      this.productsFormArray.push(this.fb.group({
+        productId: [p.productId, Validators.required],
+        quantity: [p.quantity, [Validators.required, Validators.min(1)]],
+        unitPrice: [p.unitPrice, [Validators.required, Validators.min(0.01)]]
+      }));
     });
-
+    
     this.voucherForm.patchValue({
       voucherNumber: voucher.voucherNumber,
       date: dateStr,
       supplier: voucher.supplier,
-      notes: voucher.notes,
+      notes: voucher.notes
     });
-
+    
     this.showForm = true;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -342,16 +320,12 @@ export class EntryVoucherComponent implements OnInit {
   deleteVoucher(id: string, voucherNumber: string): void {
     if (confirm(`Supprimer le bon "${voucherNumber}" ?`)) {
       this.isLoading = true;
-      this.vouchersService
-        .deleteEntryVoucher(id)
-        .then(() => {
-          this.loadVouchers();
-        })
-        .catch((err: any) => {
-          this.errorMessage = 'Erreur lors de la suppression.';
-          console.error(err);
-        })
-        .finally(() => (this.isLoading = false));
+      this.vouchersService.deleteEntryVoucher(id).then(() => {
+        this.loadVouchers();
+      }).catch((err: any) => {
+        this.errorMessage = 'Erreur lors de la suppression.';
+        console.error(err);
+      }).finally(() => this.isLoading = false);
     }
   }
 
@@ -363,7 +337,7 @@ export class EntryVoucherComponent implements OnInit {
       voucherNumber: this.vouchersService.generateVoucherNumber(),
       date: today,
       supplier: '',
-      notes: '',
+      notes: ''
     });
     this.isEditing = false;
     this.editingId = null;
@@ -384,8 +358,8 @@ export class EntryVoucherComponent implements OnInit {
 
   getProductName(productId: string): string {
     let productName = '';
-    this.products$.subscribe((products) => {
-      const product = products.find((p) => p.id === productId);
+    this.products$.subscribe(products => {
+      const product = products.find(p => p.id === productId);
       productName = product ? product.name : 'Produit inconnu';
     });
     return productName;
@@ -399,7 +373,7 @@ export class EntryVoucherComponent implements OnInit {
   }
 
   printList(): void {
-    this.filteredVouchers$.pipe(take(1)).subscribe((vouchers) => {
+    this.filteredVouchers$.pipe(take(1)).subscribe(vouchers => {
       if (vouchers.length === 0) {
         alert('Aucun bon à imprimer (liste vide après filtres).');
         return;
@@ -409,18 +383,15 @@ export class EntryVoucherComponent implements OnInit {
   }
 
   generatePrintHTML(vouchers: EntryVoucher[]): void {
-    const printWindow = window.open('', '_blank', 'width=900,height=700');
+    const printWindow = window.open("", "_blank", "width=900,height=700");
     if (!printWindow) {
-      alert('❌ Popup bloquée ! Autorisez les popups.');
+      alert("❌ Popup bloquée ! Autorisez les popups.");
       return;
     }
 
-    const today = new Date().toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    const today = new Date().toLocaleDateString("fr-FR", {
+      year: "numeric", month: "long", day: "numeric",
+      hour: "2-digit", minute: "2-digit"
     });
 
     const totalVouchers = vouchers.length;
@@ -430,17 +401,14 @@ export class EntryVoucherComponent implements OnInit {
     const filters: string[] = [];
     if (this.searchTerm) filters.push(`Recherche: "${this.searchTerm}"`);
     if (this.selectedSupplier) filters.push(`Fournisseur: ${this.selectedSupplier}`);
-    if (this.dateFrom)
-      filters.push(`Date Début: ${new Date(this.dateFrom).toLocaleDateString('fr-FR')}`);
+    if (this.dateFrom) filters.push(`Date Début: ${new Date(this.dateFrom).toLocaleDateString('fr-FR')}`);
     if (this.dateTo) filters.push(`Date Fin: ${new Date(this.dateTo).toLocaleDateString('fr-FR')}`);
     if (this.minAmount !== null) filters.push(`Montant Min: ${this.minAmount} DT`);
     if (this.maxAmount !== null) filters.push(`Montant Max: ${this.maxAmount} DT`);
-    const sortLabels: any = { date: 'Date', supplier: 'Fournisseur', amount: 'Montant' };
-    filters.push(`Tri: ${sortLabels[this.sortBy]} (${this.sortOrder === 'asc' ? '↑' : '↓'})`);
+    const sortLabels: any = { date: "Date", supplier: "Fournisseur", amount: "Montant" };
+    filters.push(`Tri: ${sortLabels[this.sortBy]} (${this.sortOrder === "asc" ? "↑" : "↓"})`);
 
-    const rows = vouchers
-      .map(
-        (v, i) => `
+    const rows = vouchers.map((v, i) => `
       <tr>
         <td>${i + 1}</td>
         <td>${v.voucherNumber}</td>
@@ -449,9 +417,7 @@ export class EntryVoucherComponent implements OnInit {
         <td>${v.products.length}</td>
         <td>${(v.totalAmount || 0).toFixed(2)} DT</td>
       </tr>
-    `,
-      )
-      .join('');
+    `).join("");
 
     const html = `
       <!DOCTYPE html>
@@ -486,7 +452,7 @@ export class EntryVoucherComponent implements OnInit {
         </div>
         <div class="filters">
           <h3>Filtres Appliqués</h3>
-          <ul>${filters.map((f) => `<li>• ${f}</li>`).join('')}</ul>
+          <ul>${filters.map(f => `<li>• ${f}</li>`).join("")}</ul>
         </div>
         <div class="stats">
           <div class="stat"><div class="label">Total Bons</div><div class="value">${totalVouchers}</div></div>
@@ -524,26 +490,26 @@ export class EntryVoucherComponent implements OnInit {
   }
 
   printSingle(id: string): void {
-    const allCards = document.querySelectorAll('.voucher-card');
+    const allCards = document.querySelectorAll(".voucher-card");
     allCards.forEach((card: any) => {
-      if (card.getAttribute('data-id') !== id) {
-        card.style.display = 'none';
+      if (card.getAttribute("data-id") !== id) {
+        card.style.display = "none";
       }
     });
     window.print();
     setTimeout(() => {
       allCards.forEach((card: any) => {
-        card.style.display = '';
+        card.style.display = "";
       });
     }, 100);
   }
 
   printItem(item: any): void {
-    this.filteredVouchers$.pipe(take(1)).subscribe((vouchers) => {
-      const voucher = vouchers.find((v) => v.id === item.id);
+    this.filteredVouchers$.pipe(take(1)).subscribe(vouchers => {
+      const voucher = vouchers.find(v => v.id === item.id);
       if (!voucher) return;
-
-      const printWindow = window.open('', '_blank', 'width=800,height=600');
+      
+      const printWindow = window.open("", "_blank", "width=800,height=600");
       if (!printWindow) return;
 
       const html = `
@@ -558,6 +524,7 @@ export class EntryVoucherComponent implements OnInit {
             table { width: 100%; border-collapse: collapse; margin: 15px 0; }
             th, td { padding: 8px; border: 1px solid #ddd; }
             th { background: #f3f4f6; }
+      .description { font-size: 10px; color: #666; font-style: italic; max-width: 150px; word-wrap: break-word; }
           </style>
         </head>
         <body>
@@ -569,30 +536,26 @@ export class EntryVoucherComponent implements OnInit {
           <h3>Produits</h3>
           <table>
             <thead>
-              <tr><th>Produit</th><th>Quantité</th><th>Prix Unit.</th><th>Sous-total</th></tr>
+              <tr><th>Produit</th><th>Description</th><th>Quantité</th><th>Prix Unit.</th><th>Sous-total</th></tr>
             </thead>
             <tbody>
-              ${voucher.products
-                .map(
-                  (p) => `
+              ${voucher.products.map(p => `
                 <tr>
-                  <td>${p.productName}</td>
+                  <td>${p.description}</td><td class="description">${this.getdescription(p.productId)}</td>
                   <td>${p.quantity}</td>
                   <td>${p.unitPrice.toFixed(2)} DT</td>
                   <td>${p.subtotal.toFixed(2)} DT</td>
                 </tr>
-              `,
-                )
-                .join('')}
+              `).join("")}
             </tbody>
             <tfoot>
-              <tr><th colspan="3">Total</th><th>${(voucher.totalAmount || 0).toFixed(2)} DT</th></tr>
+              <tr><th colspan="4">Total</th><th>${(voucher.totalAmount || 0).toFixed(2)} DT</th></tr>
             </tfoot>
           </table>
         </body>
         </html>
       `;
-
+      
       printWindow.document.write(html);
       printWindow.document.close();
       setTimeout(() => {
