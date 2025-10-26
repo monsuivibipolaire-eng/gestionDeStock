@@ -1,5 +1,5 @@
 <div class="container mx-auto px-4 py-8">
-  <h1 class="text-3xl font-bold text-gray-800 mb-6">Bons de Sortie (Multi-Produits)</h1>
+  <h1 class="text-3xl font-bold text-gray-800 mb-6">Bons d'Entrée (Multi-Produits)</h1>
 
   <div
     *ngIf="errorMessage"
@@ -9,6 +9,7 @@
     <button (click)="errorMessage = ''" class="float-right">&times;</button>
   </div>
 
+  <!-- Barre recherche + boutons -->
   <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
     <input
       type="text"
@@ -57,12 +58,13 @@
     </h3>
 
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <!-- Fournisseur -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Client</label>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Fournisseur</label>
         <ng-select
-          [ngModel]="selectedCustomer"
-          (ngModelChange)="onCustomerFilterChange($event)"
-          [items]="(customers$ | async) ?? []"
+          [ngModel]="selectedSupplier"
+          (ngModelChange)="onSupplierFilterChange($event)"
+          [items]="(suppliers$ | async) ?? []"
           bindLabel="name"
           bindValue="name"
           placeholder="Tous"
@@ -70,6 +72,8 @@
           class="w-full"
         ></ng-select>
       </div>
+
+      <!-- Date Début/Fin -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Date Début</label>
         <input
@@ -88,6 +92,8 @@
           class="w-full px-3 py-2 border rounded-lg"
         />
       </div>
+
+      <!-- Tri -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Trier par</label>
         <select
@@ -98,14 +104,16 @@
           <option value="date">
             Date {{ sortBy === 'date' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}
           </option>
-          <option value="customer">
-            Client {{ sortBy === 'customer' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}
+          <option value="supplier">
+            Fournisseur {{ sortBy === 'supplier' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}
           </option>
           <option value="amount">
             Montant {{ sortBy === 'amount' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}
           </option>
         </select>
       </div>
+
+      <!-- Montant Min/Max -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Montant Min (DT)</label>
         <input
@@ -138,13 +146,13 @@
     </div>
   </div>
 
-  <!-- Formulaire (structure identique entry avec customer) -->
+  <!-- Formulaire (inchangé mais avec ng-select fournisseur déjà présent) -->
   <div *ngIf="showForm" class="bg-white shadow-md rounded-lg p-6 mb-6 no-print">
     <h2 class="text-2xl font-semibold mb-4">
-      {{ isEditing ? 'Modifier' : 'Nouveau' }} Bon de Sortie
+      {{ isEditing ? 'Modifier' : 'Nouveau' }} Bon d'Entrée
     </h2>
     <form [formGroup]="voucherForm" (ngSubmit)="onSubmit()" class="space-y-4">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label class="block text-gray-700 font-medium mb-2">N° Bon *</label>
           <input
@@ -159,10 +167,10 @@
           <input formControlName="date" type="date" class="w-full px-4 py-2 border rounded-lg" />
         </div>
         <div>
-          <label class="block text-gray-700 font-medium mb-2">Client *</label>
+          <label class="block text-gray-700 font-medium mb-2">Fournisseur *</label>
           <ng-select
-            formControlName="customer"
-            [items]="(customers$ | async) ?? []"
+            formControlName="supplier"
+            [items]="(suppliers$ | async) ?? []"
             bindLabel="name"
             bindValue="name"
             placeholder="-- Sélectionnez --"
@@ -170,14 +178,6 @@
             [clearable]="true"
             class="w-full"
           ></ng-select>
-        </div>
-        <div>
-          <label class="block text-gray-700 font-medium mb-2">Destination</label>
-          <input
-            formControlName="destination"
-            type="text"
-            class="w-full px-4 py-2 border rounded-lg"
-          />
         </div>
       </div>
 
@@ -240,10 +240,10 @@
             </div>
           </div>
         </div>
-        <div class="mt-4 bg-red-50 p-4 rounded">
+        <div class="mt-4 bg-blue-50 p-4 rounded">
           <div class="flex justify-between text-xl font-bold">
             <span>Total :</span>
-            <span class="text-red-600">{{ calculateTotal() | number: '1.2-2' }} DT</span>
+            <span class="text-blue-600">{{ calculateTotal() | number: '1.2-2' }} DT</span>
           </div>
         </div>
       </div>
@@ -261,7 +261,7 @@
         <button
           type="submit"
           [disabled]="isLoading || voucherForm.invalid"
-          class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg disabled:bg-gray-400"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg disabled:bg-gray-400"
         >
           <span *ngIf="isLoading">Enregistrement...</span>
           <span *ngIf="!isLoading">{{ isEditing ? 'Mettre à jour' : 'Créer Bon' }}</span>
@@ -291,10 +291,10 @@
         <div class="flex-1 grid grid-cols-4 gap-4">
           <div><strong>N° :</strong> {{ voucher.voucherNumber }}</div>
           <div><strong>Date:</strong> {{ formatDate(voucher.date) }}</div>
-          <div><strong>Client:</strong> {{ voucher.customer }}</div>
+          <div><strong>Fournisseur:</strong> {{ voucher.supplier }}</div>
           <div><strong>Total:</strong> {{ voucher.totalAmount | number: '1.2-2' }} DT</div>
         </div>
-        <button class="text-red-600 no-print">
+        <button class="text-blue-600 no-print">
           {{ expandedVoucherId === voucher.id ? '▼' : '►' }}
         </button>
       </div>
@@ -303,27 +303,23 @@
         <table class="min-w-full">
           <thead class="bg-gray-100">
             <tr>
-              <th class="px-4 py-2 text-left text-sm">ID</th>
-              <th class="px-4 py-2 text-left text-sm">Nom Produit</th>
-              <th class="px-4 py-2 text-left text-sm">Description</th>
+              <th class="px-4 py-2 text-left text-sm">Produit</th>
               <th class="px-4 py-2 text-left text-sm">Quantité</th>
-              <th class="px-4 py-2 text-left text-sm">Prix Unit</th>
+              <th class="px-4 py-2 text-left text-sm">Prix Unit.</th>
               <th class="px-4 py-2 text-left text-sm">Sous-total</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let line of voucher?.products || []" class="border-t">
-              <td class="px-4 py-2">{{ line.productId }}</td>
-              <td class="px-4 py-2">{{ getProductName(line.productId) }}</td>
-              <td class="px-4 py-2">{{ getDescription(line.productId) }}</td>
+            <tr *ngFor="let line of voucher.products" class="border-t">
+              <td class="px-4 py-2">{{ line.productName }}</td>
               <td class="px-4 py-2">{{ line.quantity }}</td>
               <td class="px-4 py-2">{{ line.unitPrice | number: '1.2-2' }} DT</td>
-              <td class="px-4 py-2">{{ getSubtotal(line) | number: '1.2-2' }} DT</td>
+              <td class="px-4 py-2 font-semibold">{{ line.subtotal | number: '1.2-2' }} DT</td>
             </tr>
-            <tr class="bg-red-50 font-bold">
-              <td colspan="5" class="px-4 py-2 text-right">Total :</td>
-              <td class="px-4 py-2 text-red-600">
-                {{ voucher?.totalAmount | number: '1.2-2' }} DT
+            <tr class="bg-blue-50 font-bold">
+              <td colspan="3" class="px-4 py-2 text-right">Total :</td>
+              <td class="px-4 py-2 text-blue-600">
+                {{ voucher.totalAmount | number: '1.2-2' }} DT
               </td>
             </tr>
           </tbody>

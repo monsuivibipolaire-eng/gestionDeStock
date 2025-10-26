@@ -7,7 +7,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Timestamp } from '@angular/fire/firestore';
 import { NgSelectModule } from '@ng-select/ng-select';
-import { ExitVoucher, ProductLine } from "../../models/exit-voucher";
+import { ExitVoucher, ProductLine } from '../../models/exit-voucher';
 import { ExitVouchersService } from '../../services/exit-vouchers.service';
 import { ProductsService } from '../../services/products.service';
 import { CustomersService } from '../../services/customers.service';
@@ -19,12 +19,13 @@ import { Customer } from '../../models/customer';
   templateUrl: './exit-voucher.component.html',
   styleUrls: ['./exit-voucher.component.scss'],
   imports: [ReactiveFormsModule, NgSelectModule, CommonModule, FormsModule],
-  standalone: true
+  standalone: true,
 })
 export class ExitVoucherComponent implements OnInit {
   vouchers$!: Observable<ExitVoucher[]>;
   filteredVouchers$!: Observable<ExitVoucher[]>;
   products$!: Observable<Product[]>;
+  productList: Product[] = [];
   customers$!: Observable<Customer[]>;
   voucherForm: FormGroup;
   isLoading = false;
@@ -33,7 +34,7 @@ export class ExitVoucherComponent implements OnInit {
   errorMessage = '';
   showForm = false;
   expandedVoucherId: string | null = null;
-  
+
   // Filtres
   searchTerm = '';
   searchTerm$ = new BehaviorSubject<string>('');
@@ -57,7 +58,7 @@ export class ExitVoucherComponent implements OnInit {
     private productsService: ProductsService,
     private customersService: CustomersService,
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
   ) {
     const today = new Date().toISOString().split('T')[0];
     this.voucherForm = this.fb.group({
@@ -66,15 +67,16 @@ export class ExitVoucherComponent implements OnInit {
       customer: ['', Validators.required],
       destination: [''],
       products: this.fb.array([this.createProductLine()]),
-      notes: ['']
+      notes: [''],
     });
   }
 
   ngOnInit(): void {
     this.loadVouchers();
     this.products$ = this.productsService.getProducts();
+    this.products$.subscribe((p) => (this.productList = p));
     this.customers$ = this.customersService.getCustomers();
-    
+
     this.filteredVouchers$ = combineLatest([
       this.vouchers$,
       this.searchTerm$,
@@ -84,62 +86,70 @@ export class ExitVoucherComponent implements OnInit {
       this.minAmount$,
       this.maxAmount$,
       this.sortBy$,
-      this.sortOrder$
+      this.sortOrder$,
     ]).pipe(
-      map(([vouchers, term, customer, dateFrom, dateTo, minAmount, maxAmount, sortBy, sortOrder]) => {
-        let filtered = vouchers;
-        
-        if (term) {
-          filtered = filtered.filter(v =>
-            v.voucherNumber.toLowerCase().includes(term.toLowerCase())
-          );
-        }
-        
-        if (customer) {
-          filtered = filtered.filter(v => v.customer === customer);
-        }
-        
-        if (dateFrom) {
-          const fromDate = new Date(dateFrom);
-          filtered = filtered.filter(v => {
-            const vDate = v.date instanceof Timestamp ? v.date.toDate() : new Date(v.date);
-            return vDate >= fromDate;
-          });
-        }
-        
-        if (dateTo) {
-          const toDate = new Date(dateTo);
-          toDate.setHours(23, 59, 59);
-          filtered = filtered.filter(v => {
-            const vDate = v.date instanceof Timestamp ? v.date.toDate() : new Date(v.date);
-            return vDate <= toDate;
-          });
-        }
-        
-        if (minAmount !== null) {
-          filtered = filtered.filter(v => (v.totalAmount || 0) >= minAmount);
-        }
-        
-        if (maxAmount !== null) {
-          filtered = filtered.filter(v => (v.totalAmount || 0) <= maxAmount);
-        }
-        
-        filtered = filtered.sort((a, b) => {
-          let compareValue = 0;
-          if (sortBy === 'date') {
-            const dateA = a.date instanceof Timestamp ? a.date.toDate().getTime() : new Date(a.date).getTime();
-            const dateB = b.date instanceof Timestamp ? b.date.toDate().getTime() : new Date(b.date).getTime();
-            compareValue = dateA - dateB;
-          } else if (sortBy === 'customer') {
-            compareValue = a.customer.localeCompare(b.customer);
-          } else if (sortBy === 'amount') {
-            compareValue = (a.totalAmount || 0) - (b.totalAmount || 0);
+      map(
+        ([vouchers, term, customer, dateFrom, dateTo, minAmount, maxAmount, sortBy, sortOrder]) => {
+          let filtered = vouchers;
+
+          if (term) {
+            filtered = filtered.filter((v) =>
+              v.voucherNumber.toLowerCase().includes(term.toLowerCase()),
+            );
           }
-          return sortOrder === 'asc' ? compareValue : -compareValue;
-        });
-        
-        return filtered;
-      })
+
+          if (customer) {
+            filtered = filtered.filter((v) => v.customer === customer);
+          }
+
+          if (dateFrom) {
+            const fromDate = new Date(dateFrom);
+            filtered = filtered.filter((v) => {
+              const vDate = v.date instanceof Timestamp ? v.date.toDate() : new Date(v.date);
+              return vDate >= fromDate;
+            });
+          }
+
+          if (dateTo) {
+            const toDate = new Date(dateTo);
+            toDate.setHours(23, 59, 59);
+            filtered = filtered.filter((v) => {
+              const vDate = v.date instanceof Timestamp ? v.date.toDate() : new Date(v.date);
+              return vDate <= toDate;
+            });
+          }
+
+          if (minAmount !== null) {
+            filtered = filtered.filter((v) => (v.totalAmount || 0) >= minAmount);
+          }
+
+          if (maxAmount !== null) {
+            filtered = filtered.filter((v) => (v.totalAmount || 0) <= maxAmount);
+          }
+
+          filtered = filtered.sort((a, b) => {
+            let compareValue = 0;
+            if (sortBy === 'date') {
+              const dateA =
+                a.date instanceof Timestamp
+                  ? a.date.toDate().getTime()
+                  : new Date(a.date).getTime();
+              const dateB =
+                b.date instanceof Timestamp
+                  ? b.date.toDate().getTime()
+                  : new Date(b.date).getTime();
+              compareValue = dateA - dateB;
+            } else if (sortBy === 'customer') {
+              compareValue = a.customer.localeCompare(b.customer);
+            } else if (sortBy === 'amount') {
+              compareValue = (a.totalAmount || 0) - (b.totalAmount || 0);
+            }
+            return sortOrder === 'asc' ? compareValue : -compareValue;
+          });
+
+          return filtered;
+        },
+      ),
     );
   }
 
@@ -151,7 +161,7 @@ export class ExitVoucherComponent implements OnInit {
     return this.fb.group({
       productId: ['', Validators.required],
       quantity: [1, [Validators.required, Validators.min(1)]],
-      unitPrice: [0, [Validators.required, Validators.min(0.01)]]
+      unitPrice: [0, [Validators.required, Validators.min(0.01)]],
     });
   }
 
@@ -173,7 +183,7 @@ export class ExitVoucherComponent implements OnInit {
   calculateTotal(): number {
     return this.productsFormArray.controls.reduce((sum, control) => {
       const line = control.value;
-      return sum + ((line.quantity || 0) * (line.unitPrice || 0));
+      return sum + (line.quantity || 0) * (line.unitPrice || 0);
     }, 0);
   }
 
@@ -246,17 +256,17 @@ export class ExitVoucherComponent implements OnInit {
       this.errorMessage = 'Veuillez remplir tous les champs obligatoires.';
       return;
     }
-    
+
     this.isLoading = true;
     this.errorMessage = '';
     const formValue = this.voucherForm.value;
-    
+
     const productsWithNames: ProductLine[] = formValue.products.map((p: any) => ({
       ...p,
       productName: this.getProductName(p.productId),
-      subtotal: p.quantity * p.unitPrice
+      subtotal: p.quantity * p.unitPrice,
     }));
-    
+
     const voucherData = {
       voucherNumber: formValue.voucherNumber,
       date: Timestamp.fromDate(new Date(formValue.date)),
@@ -264,25 +274,33 @@ export class ExitVoucherComponent implements OnInit {
       destination: formValue.destination,
       products: productsWithNames,
       totalAmount: this.calculateTotal(),
-      notes: formValue.notes
+      notes: formValue.notes,
     };
-    
+
     if (this.isEditing && this.editingId) {
-      this.vouchersService.updateExitVoucher(this.editingId, voucherData).then(() => {
-        this.resetForm();
-        this.loadVouchers();
-      }).catch((err: any) => {
-        this.errorMessage = 'Erreur lors de la modification.';
-        console.error(err);
-      }).finally(() => this.isLoading = false);
+      this.vouchersService
+        .updateExitVoucher(this.editingId, voucherData)
+        .then(() => {
+          this.resetForm();
+          this.loadVouchers();
+        })
+        .catch((err: any) => {
+          this.errorMessage = 'Erreur lors de la modification.';
+          console.error(err);
+        })
+        .finally(() => (this.isLoading = false));
     } else {
-      this.vouchersService.addExitVoucher(voucherData).then(() => {
-        this.resetForm();
-        this.loadVouchers();
-      }).catch((err: any) => {
-        this.errorMessage = "Erreur lors de l'ajout.";
-        console.error(err);
-      }).finally(() => this.isLoading = false);
+      this.vouchersService
+        .addExitVoucher(voucherData)
+        .then(() => {
+          this.resetForm();
+          this.loadVouchers();
+        })
+        .catch((err: any) => {
+          this.errorMessage = "Erreur lors de l'ajout.";
+          console.error(err);
+        })
+        .finally(() => (this.isLoading = false));
     }
   }
 
@@ -290,24 +308,26 @@ export class ExitVoucherComponent implements OnInit {
     this.isEditing = true;
     this.editingId = voucher.id || null;
     const dateStr = (voucher.date as Timestamp).toDate().toISOString().split('T')[0];
-    
+
     this.productsFormArray.clear();
-    voucher.products.forEach(p => {
-      this.productsFormArray.push(this.fb.group({
-        productId: [p.productId, Validators.required],
-        quantity: [p.quantity, [Validators.required, Validators.min(1)]],
-        unitPrice: [p.unitPrice, [Validators.required, Validators.min(0.01)]]
-      }));
+    voucher.products.forEach((p) => {
+      this.productsFormArray.push(
+        this.fb.group({
+          productId: [p.productId, Validators.required],
+          quantity: [p.quantity, [Validators.required, Validators.min(1)]],
+          unitPrice: [p.unitPrice, [Validators.required, Validators.min(0.01)]],
+        }),
+      );
     });
-    
+
     this.voucherForm.patchValue({
       voucherNumber: voucher.voucherNumber,
       date: dateStr,
       customer: voucher.customer,
       destination: voucher.destination,
-      notes: voucher.notes
+      notes: voucher.notes,
     });
-    
+
     this.showForm = true;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -315,12 +335,16 @@ export class ExitVoucherComponent implements OnInit {
   deleteVoucher(id: string, voucherNumber: string): void {
     if (confirm(`Supprimer le bon "${voucherNumber}" ?`)) {
       this.isLoading = true;
-      this.vouchersService.deleteExitVoucher(id).then(() => {
-        this.loadVouchers();
-      }).catch((err: any) => {
-        this.errorMessage = 'Erreur lors de la suppression.';
-        console.error(err);
-      }).finally(() => this.isLoading = false);
+      this.vouchersService
+        .deleteExitVoucher(id)
+        .then(() => {
+          this.loadVouchers();
+        })
+        .catch((err: any) => {
+          this.errorMessage = 'Erreur lors de la suppression.';
+          console.error(err);
+        })
+        .finally(() => (this.isLoading = false));
     }
   }
 
@@ -333,7 +357,7 @@ export class ExitVoucherComponent implements OnInit {
       date: today,
       customer: '',
       destination: '',
-      notes: ''
+      notes: '',
     });
     this.isEditing = false;
     this.editingId = null;
@@ -354,8 +378,8 @@ export class ExitVoucherComponent implements OnInit {
 
   getProductName(productId: string): string {
     let productName = '';
-    this.products$.subscribe(products => {
-      const product = products.find(p => p.id === productId);
+    this.products$.subscribe((products) => {
+      const product = products.find((p) => p.id === productId);
       productName = product ? product.name : 'Produit inconnu';
     });
     return productName;
@@ -369,7 +393,7 @@ export class ExitVoucherComponent implements OnInit {
   }
 
   printList(): void {
-    this.filteredVouchers$.pipe(take(1)).subscribe(vouchers => {
+    this.filteredVouchers$.pipe(take(1)).subscribe((vouchers) => {
       if (vouchers.length === 0) {
         alert('Aucun bon à imprimer.');
         return;
@@ -379,14 +403,18 @@ export class ExitVoucherComponent implements OnInit {
   }
 
   generatePrintHTML(vouchers: ExitVoucher[]): void {
-    const printWindow = window.open("", "_blank", "width=900,height=700");
+    const printWindow = window.open('', '_blank', 'width=900,height=700');
     if (!printWindow) {
-      alert("❌ Popup bloquée !");
+      alert('❌ Popup bloquée !');
       return;
     }
 
-    const today = new Date().toLocaleDateString("fr-FR", {
-      year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit"
+    const today = new Date().toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
 
     const totalVouchers = vouchers.length;
@@ -396,14 +424,17 @@ export class ExitVoucherComponent implements OnInit {
     const filters: string[] = [];
     if (this.searchTerm) filters.push(`Recherche: "${this.searchTerm}"`);
     if (this.selectedCustomer) filters.push(`Client: ${this.selectedCustomer}`);
-    if (this.dateFrom) filters.push(`Date Début: ${new Date(this.dateFrom).toLocaleDateString('fr-FR')}`);
+    if (this.dateFrom)
+      filters.push(`Date Début: ${new Date(this.dateFrom).toLocaleDateString('fr-FR')}`);
     if (this.dateTo) filters.push(`Date Fin: ${new Date(this.dateTo).toLocaleDateString('fr-FR')}`);
     if (this.minAmount !== null) filters.push(`Montant Min: ${this.minAmount} DT`);
     if (this.maxAmount !== null) filters.push(`Montant Max: ${this.maxAmount} DT`);
-    const sortLabels: any = { date: "Date", customer: "Client", amount: "Montant" };
-    filters.push(`Tri: ${sortLabels[this.sortBy]} (${this.sortOrder === "asc" ? "↑" : "↓"})`);
+    const sortLabels: any = { date: 'Date', customer: 'Client', amount: 'Montant' };
+    filters.push(`Tri: ${sortLabels[this.sortBy]} (${this.sortOrder === 'asc' ? '↑' : '↓'})`);
 
-    const rows = vouchers.map((v, i) => `
+    const rows = vouchers
+      .map(
+        (v, i) => `
       <tr>
         <td>${i + 1}</td>
         <td>${v.voucherNumber}</td>
@@ -412,7 +443,9 @@ export class ExitVoucherComponent implements OnInit {
         <td>${v.products.length}</td>
         <td>${(v.totalAmount || 0).toFixed(2)} DT</td>
       </tr>
-    `).join("");
+    `,
+      )
+      .join('');
 
     const html = `
       <!DOCTYPE html>
@@ -447,7 +480,7 @@ export class ExitVoucherComponent implements OnInit {
         </div>
         <div class="filters">
           <h3>Filtres Appliqués</h3>
-          <ul>${filters.map(f => `<li>• ${f}</li>`).join("")}</ul>
+          <ul>${filters.map((f) => `<li>• ${f}</li>`).join('')}</ul>
         </div>
         <div class="stats">
           <div class="stat"><div class="label">Total Bons</div><div class="value">${totalVouchers}</div></div>
@@ -474,11 +507,11 @@ export class ExitVoucherComponent implements OnInit {
   }
 
   printItem(item: any): void {
-    this.filteredVouchers$.pipe(take(1)).subscribe(vouchers => {
-      const voucher = vouchers.find(v => v.id === item.id);
+    this.filteredVouchers$.pipe(take(1)).subscribe((vouchers) => {
+      const voucher = vouchers.find((v) => v.id === item.id);
       if (!voucher) return;
-      
-      const printWindow = window.open("", "_blank", "width=800,height=600");
+
+      const printWindow = window.open('', '_blank', 'width=800,height=600');
       if (!printWindow) return;
 
       const html = `
@@ -508,14 +541,18 @@ export class ExitVoucherComponent implements OnInit {
               <tr><th>Produit</th><th>Quantité</th><th>Prix Unit.</th><th>Sous-total</th></tr>
             </thead>
             <tbody>
-              ${voucher.products.map(p => `
+              ${voucher.products
+                .map(
+                  (p) => `
                 <tr>
                   <td>${p.productName}</td>
                   <td>${p.quantity}</td>
                   <td>${p.unitPrice.toFixed(2)} DT</td>
                   <td>${p.subtotal.toFixed(2)} DT</td>
                 </tr>
-              `).join("")}
+              `,
+                )
+                .join('')}
             </tbody>
             <tfoot>
               <tr><th colspan="3">Total</th><th>${(voucher.totalAmount || 0).toFixed(2)} DT</th></tr>
@@ -524,7 +561,7 @@ export class ExitVoucherComponent implements OnInit {
         </body>
         </html>
       `;
-      
+
       printWindow.document.write(html);
       printWindow.document.close();
       setTimeout(() => {

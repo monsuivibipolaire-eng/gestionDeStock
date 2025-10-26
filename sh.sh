@@ -2,180 +2,95 @@
 
 set -e
 
-echo "🚀 ==================== SCRIPT COMPLET FINAL ===================="
-echo "Cet script corrige TOUS les problèmes du projet en une fois"
-echo "==========================================================="
+echo "🚨 RESET COMPLET DU PROJET"
 echo ""
 
 ####
-# ÉTAPE 1 : Restauration depuis Git (état propre)
+# ÉTAPE 1 : Restauration depuis Git
 ####
 echo "📦 ÉTAPE 1/5 : Restauration depuis Git..."
 git add -A
-git commit -m "Avant corrections finales" || true
+git commit -m "Avant reset urgent" || true
 git checkout HEAD -- src/app/components/entry-voucher/
 git checkout HEAD -- src/app/components/exit-voucher/
-echo "✔️  Fichiers restaurés"
+echo "✔️  Restauré"
 
 ####
-# ÉTAPE 2 : Correction de entry-voucher.component.ts
+# ÉTAPE 2 : Nettoyage du cache
 ####
 echo ""
-echo "🔧 ÉTAPE 2/5 : Correction du composant entry-voucher..."
+echo "🧹 ÉTAPE 2/5 : Nettoyage du cache..."
+rm -rf dist .angular node_modules/.cache
+echo "✔️  Cache nettoyé"
+
+####
+# ÉTAPE 3 : Ajouter les propriétés/méthodes MINIMALES
+####
+echo ""
+echo "🔧 ÉTAPE 3/5 : Ajout minimal des fonctionnalités..."
 
 ENTRY_TS="src/app/components/entry-voucher/entry-voucher.component.ts"
 
-# Ajouter productList
-perl -i -pe '
-  if (/products\$!: Observable<Product\[\]>;/) {
-    $_ .= "  productList: Product[] = [];\n";
-  }
-' "$ENTRY_TS"
+# Ajouter productList (une fois)
+if ! grep -q "productList: Product\[\]" "$ENTRY_TS"; then
+  perl -i -pe 's/(products\$!: Observable<Product\[\]>;)/$1\n  productList: Product[] = [];/' "$ENTRY_TS"
+fi
 
-# Ajouter subscribe
-perl -i -pe '
-  if (/this\.products\$ = this\.productsService\.getProducts\(\);/) {
-    $_ .= "    this.products\$.subscribe(products => {\n      this.productList = products;\n    });\n";
-  }
-' "$ENTRY_TS"
+# Ajouter subscribe (une fois)
+if ! grep -q "this\.productList = products" "$ENTRY_TS"; then
+  perl -i -pe 's/(this\.products\$ = this\.productsService\.getProducts\(\);)/$1\n    this.products$.subscribe(p => this.productList = p);/' "$ENTRY_TS"
+fi
 
-# Ajouter getProductName et getDescription
+# Ajouter les 3 méthodes (une fois)
 if ! grep -q "getProductName(productId: string): string" "$ENTRY_TS"; then
   awk '
-    /^export class EntryVoucherComponent/ {in_class=1}
+    /^export class EntryVoucherComponent/ { in_class = 1 }
     in_class && /^}$/ && !added {
-      print "  getProductName(productId: string): string {"
-      print "    const prod = this.productList.find(p => p.id === productId);"
-      print "    return prod?.name || \"Produit inconnu\";"
-      print "  }"
-      print ""
-      print "  getDescription(productId: string): string {"
-      print "    const prod = this.productList.find(p => p.id === productId);"
-      print "    return prod?.description || \"Pas de description\";"
-      print "  }"
-      print ""
-      added=1
+      print "  getProductName(productId: string): string { const p = this.productList?.find(x => x.id === productId); return p?.name || \"\"; }"
+      print "  getDescription(productId: string): string { const p = this.productList?.find(x => x.id === productId); return p?.description || \"\"; }"
+      print "  getSubtotal(line: any): number { return (line?.quantity || 0) * (line?.unitPrice || 0); }"
+      added = 1
     }
-    {print}
+    { print }
   ' "$ENTRY_TS" > "${ENTRY_TS}.tmp" && mv "${ENTRY_TS}.tmp" "$ENTRY_TS"
 fi
 
-echo "✔️  entry-voucher.component.ts corrigé"
+echo "✔️  Propriétés/méthodes ajoutées"
 
 ####
-# ÉTAPE 3 : Correction du template entry-voucher
-####
-echo ""
-echo "🎨 ÉTAPE 3/5 : Correction du template entry-voucher..."
-
-ENTRY_HTML="src/app/components/entry-voucher/entry-voucher.component.html"
-
-# Remplacer entry par voucher
-perl -i -pe '
-  s/entry\?\.products/voucher.products/g;
-  s/entry\?\.totalAmount/voucher.totalAmount/g;
-' "$ENTRY_HTML"
-
-echo "✔️  entry-voucher.component.html corrigé"
-
-####
-# ÉTAPE 4 : Même corrections pour exit-voucher
+# ÉTAPE 4 : Remplacer les variables entry par voucher
 ####
 echo ""
-echo "🔧 ÉTAPE 4/5 : Correction du composant exit-voucher..."
+echo "🎨 ÉTAPE 4/5 : Correction des templates..."
 
-EXIT_TS="src/app/components/exit-voucher/exit-voucher.component.ts"
-EXIT_HTML="src/app/components/exit-voucher/exit-voucher.component.html"
+perl -i -pe 's/entry\?\.products/voucher?.products/g; s/entry\?\.totalAmount/voucher?.totalAmount/g;' \
+  src/app/components/entry-voucher/entry-voucher.component.html \
+  src/app/components/exit-voucher/exit-voucher.component.html
 
-# Ajouter productList si absent
-if ! grep -q "productList: Product\[\]" "$EXIT_TS"; then
-  perl -i -pe '
-    if (/products\$!: Observable<Product\[\]>;/) {
-      $_ .= "  productList: Product[] = [];\n";
-    }
-  ' "$EXIT_TS"
-fi
-
-# Ajouter subscribe si absent
-if ! grep -q "this.productList = products" "$EXIT_TS"; then
-  perl -i -pe '
-    if (/this\.products\$ = this\.productsService\.getProducts\(\);/) {
-      $_ .= "    this.products\$.subscribe(products => {\n      this.productList = products;\n    });\n";
-    }
-  ' "$EXIT_TS"
-fi
-
-# Ajouter méthodes get si absentes
-if ! grep -q "getProductName(productId: string): string" "$EXIT_TS"; then
-  awk '
-    /^export class ExitVoucherComponent/ {in_class=1}
-    in_class && /^}$/ && !added {
-      print "  getProductName(productId: string): string {"
-      print "    const prod = this.productList.find(p => p.id === productId);"
-      print "    return prod?.name || \"Produit inconnu\";"
-      print "  }"
-      print ""
-      print "  getDescription(productId: string): string {"
-      print "    const prod = this.productList.find(p => p.id === productId);"
-      print "    return prod?.description || \"Pas de description\";"
-      print "  }"
-      print ""
-      added=1
-    }
-    {print}
-  ' "$EXIT_TS" > "${EXIT_TS}.tmp" && mv "${EXIT_TS}.tmp" "$EXIT_TS"
-fi
-
-# Remplacer dans template exit-voucher
-perl -i -pe '
-  s/entry\?\.products/voucher.products/g;
-  s/entry\?\.totalAmount/voucher.totalAmount/g;
-' "$EXIT_HTML"
-
-echo "✔️  exit-voucher corrigé"
+echo "✔️  Templates corrigés"
 
 ####
-# ÉTAPE 5 : Formatage et vérification
+# ÉTAPE 5 : Relancer ng serve (optional)
 ####
 echo ""
-echo "✨ ÉTAPE 5/5 : Formatage et vérification..."
-
+echo "✨ ÉTAPE 5/5 : Formatage..."
 if command -v npx &> /dev/null; then
-  npx prettier --write src/app/components/entry-voucher/ 2>/dev/null || true
-  npx prettier --write src/app/components/exit-voucher/ 2>/dev/null || true
+  npx prettier --write src/app/components/entry-voucher/*.ts \
+    src/app/components/entry-voucher/*.html \
+    src/app/components/exit-voucher/*.ts \
+    src/app/components/exit-voucher/*.html 2>/dev/null || true
 fi
 
-echo "✔️  Formatage appliqué"
-
-####
-# RÉSUMÉ FINAL
-####
 echo ""
-echo "✅ ==================== RÉSUMÉ FINAL ===================="
+echo "✅ ==================== RESET TERMINÉ ===================="
 echo ""
-echo "✓ Restauration depuis Git"
-echo "✓ productList ajouté aux deux composants"
-echo "✓ Subscribe products\$ → productList"
-echo "✓ getProductName et getDescription ajoutées"
-echo "✓ entry remplacé par voucher dans les templates"
-echo "✓ Formatage appliqué"
-echo ""
-echo "🚀 PROCHAINES ÉTAPES :"
-echo ""
-echo "1️⃣  Nettoyez le cache :"
-echo "   rm -rf dist .angular node_modules/.cache"
-echo ""
-echo "2️⃣  Relancez l'application :"
-echo "   ng serve"
-echo ""
-echo "3️⃣  Videz Firestore :"
-echo "   - Allez dans Firebase Console"
-echo "   - Cloud Firestore > Supprimer tous les documents dans 'entryVouchers'"
-echo "   - Supprimer tous les documents dans 'exitVouchers'"
-echo ""
-echo "4️⃣  Testez l'application :"
-echo "   - Créez un nouveau Bon d'Entrée avec des produits"
-echo "   - Cliquez sur 'Détail' pour voir :"
-echo "     ID | Nom/Description du Produit | Quantité | Prix Unit"
+echo "🚀 Maintenant :"
+echo "  1. npm install"
+echo "  2. ng serve"
+echo "  3. F5 pour rafraîchir le navigateur"
+echo "  4. Ouvre F12 > Console"
+echo "  5. Clique sur un bon d'entrée"
+echo "  6. Copie le MESSAGE D'ERREUR ROUGE EXACT"
+echo "  7. Envoie-le moi"
 echo ""
 echo "✅ ================================================"

@@ -303,23 +303,27 @@
         <table class="min-w-full">
           <thead class="bg-gray-100">
             <tr>
-              <th class="px-4 py-2 text-left text-sm">Produit</th>
+              <th class="px-4 py-2 text-left text-sm">ID</th>
+              <th class="px-4 py-2 text-left text-sm">Nom Produit</th>
+              <th class="px-4 py-2 text-left text-sm">Description</th>
               <th class="px-4 py-2 text-left text-sm">Quantité</th>
-              <th class="px-4 py-2 text-left text-sm">Prix Unit.</th>
+              <th class="px-4 py-2 text-left text-sm">Prix Unit</th>
               <th class="px-4 py-2 text-left text-sm">Sous-total</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let line of voucher.products" class="border-t">
-              <td class="px-4 py-2">{{ line.productName }}</td>
+            <tr *ngFor="let line of voucher?.products || []" class="border-t">
+              <td class="px-4 py-2">{{ line.productId }}</td>
+              <td class="px-4 py-2">{{ getProductName(line.productId) }}</td>
+              <td class="px-4 py-2">{{ getDescription(line.productId) }}</td>
               <td class="px-4 py-2">{{ line.quantity }}</td>
               <td class="px-4 py-2">{{ line.unitPrice | number: '1.2-2' }} DT</td>
-              <td class="px-4 py-2 font-semibold">{{ line.subtotal | number: '1.2-2' }} DT</td>
+              <td class="px-4 py-2">{{ getSubtotal(line) | number: '1.2-2' }} DT</td>
             </tr>
-            <tr class="bg-blue-50 font-bold">
-              <td colspan="3" class="px-4 py-2 text-right">Total :</td>
-              <td class="px-4 py-2 text-blue-600">
-                {{ voucher.totalAmount | number: '1.2-2' }} DT
+            <tr class="bg-red-50 font-bold">
+              <td colspan="5" class="px-4 py-2 text-right">Total :</td>
+              <td class="px-4 py-2 text-red-600">
+                {{ voucher?.totalAmount | number: '1.2-2' }} DT
               </td>
             </tr>
           </tbody>
