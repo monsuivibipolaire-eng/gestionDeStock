@@ -313,13 +313,13 @@
           </thead>
           <tbody>
             <tr *ngFor="let line of voucher?.products || []" class="border-t">
-            <td class="px-4 py-2 text-xs font-mono">{{ line.productId }}</td>
-            <td class="px-4 py-2">{{ line.productName }}</td>
-            <td class="px-4 py-2 description">{{ line.description }}</td>
-            <td class="px-4 py-2">{{ line.quantity }}</td>
-            <td class="px-4 py-2">{{ line.unitPrice | number:1.2-2 }} DT</td>
-            <td class="px-4 py-2 font-semibold">{{ line.subtotal | number:1.2-2 }} DT</td>
-        </tr>
+              <td class="px-4 py-2">{{ line.productId }}</td>
+              <td class="px-4 py-2">{{ line.productName }}</td>
+              <td class="px-4 py-2">{{ line.description }}</td>
+              <td class="px-4 py-2">{{ line.quantity }}</td>
+              <td class="px-4 py-2">{{ line.unitPrice | number: '1.2-2' }} DT</td>
+              <td class="px-4 py-2">{{ line.subtotal | number:'1.2-2' }} DT</td>
+            </tr>
             <tr class="bg-red-50 font-bold">
               <td colspan="5" class="px-4 py-2 text-right">Total :</td>
               <td class="px-4 py-2 text-red-600">

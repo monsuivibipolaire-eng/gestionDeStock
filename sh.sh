@@ -1,160 +1,186 @@
 #!/bin/bash
 
-# Script pour FORCER la réinsertion des propriétés/méthodes de filtrage
-# dans EntryVoucherComponent pour corriger les erreurs TS2339
+# Script COMPLET pour corriger productName/description et boucle infinie
+# dans ExitVoucherComponent (.ts et .html)
 
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-echo -e "${YELLOW}=== Réinsertion Propriétés/Méthodes EntryVoucherComponent ===${NC}\n"
+echo -e "${YELLOW}=== Correction Complète ExitVoucherComponent ===${NC}\n"
 
-TS_FILE="./src/app/components/entry-voucher/entry-voucher.component.ts"
+TS_FILE="./src/app/components/exit-voucher/exit-voucher.component.ts"
+HTML_FILE="./src/app/components/exit-voucher/exit-voucher.component.html"
 
-# --- Vérifier l'existence du fichier ---
-if [ ! -f "$TS_FILE" ]; then
-    echo -e "${RED}ERREUR: Fichier $TS_FILE introuvable.${NC}"
-    exit 1
+# --- Vérifier les fichiers ---
+if [ ! -f "$TS_FILE" ]; then echo -e "${RED}ERREUR: $TS_FILE introuvable.${NC}"; exit 1; fi
+if [ ! -f "$HTML_FILE" ]; then echo -e "${RED}ERREUR: $HTML_FILE introuvable.${NC}"; exit 1; fi
+
+# --- Créer backups ---
+echo "  → Création backups (.bak.exit_complete_fix)..."
+cp "$TS_FILE" "$TS_FILE.bak.exit_complete_fix"
+cp "$HTML_FILE" "$HTML_FILE.bak.exit_complete_fix"
+
+# --- Modifier le fichier TypeScript (.ts) ---
+echo "  → Modification de $TS_FILE..."
+
+# 1. Assurer la présence et l'initialisation de productList
+if ! grep -q "productList: Product\[\] = \[\];" "$TS_FILE"; then
+    if ! grep -q 'products\$!: Observable<Product\[\]>;' "$TS_FILE"; then
+        echo -e "${YELLOW}    ⚠ Ligne 'products$!: Observable<Product[]>;' non trouvée. L'ajout de productList pourrait échouer.${NC}"
+    else
+        sed -i.tmp '/products\$!: Observable<Product\[\]>;/a\
+  productList: Product[] = []; // Cache synchrone' "$TS_FILE" && rm "${TS_FILE}.tmp"
+        echo -e "${GREEN}    ✓ Propriété productList ajoutée.${NC}"
+    fi
+else
+    echo -e "${YELLOW}    ✓ Propriété productList déjà présente.${NC}"
+fi
+if ! grep -q "this\.productList = products;" "$TS_FILE"; then
+    if ! grep -q 'this\.products\$ = this\.productsService\.getProducts();' "$TS_FILE"; then
+         echo -e "${YELLOW}    ⚠ Ligne 'this.products$ = this.productsService.getProducts();' non trouvée. L'ajout du subscribe pourrait échouer.${NC}"
+    else
+        # Insère le subscribe s'il manque dans ngOnInit
+        perl -i -0777 -pe '
+          s{(ngOnInit\(\):\s*void\s*\{.*?)(\n\s*this\.products\$ = this\.productsService\.getProducts\(\);)}
+           {$1$2\n    this.products$.subscribe((products) => {\n      this.productList = products;\n    });}s
+        ' "$TS_FILE"
+        echo -e "${GREEN}    ✓ Initialisation de productList dans ngOnInit ajoutée/vérifiée.${NC}"
+    fi
+else
+     echo -e "${YELLOW}    ✓ Initialisation de productList déjà présente.${NC}"
 fi
 
-# --- Créer backup ---
-echo "  → Création backup ($TS_FILE.bak.reinsert)..."
-cp "$TS_FILE" "$TS_FILE.bak.reinsert"
-
-# --- Réparer le fichier TypeScript (.ts) ---
-echo "  → Réparation de $TS_FILE..."
-
-# Utiliser perl pour supprimer les anciennes déclarations (commentées ou non)
-# Et réinsérer les déclarations correctes juste après la ligne 'expandedVoucherId: string | null = null;'
-# (ou une autre ligne de déclaration de propriété similaire si celle-là a été modifiée)
-
+# 2. Réécrire COMPLETEMENT getProductName et getDescription pour garantir l'utilisation de productList
+echo "  → Réécriture de getProductName et getDescription (synchrones)..."
 perl -i -0777 -pe '
-    # Supprimer les anciennes déclarations de filtre et méthodes associées
-    s/^\s*\/\/ Filtres.*?sortOrder\$.*?;.*?\n//msg;
-    s/^\s*onSearchChange\(.*?\n//msg;
-    s/^\s*onSupplierFilterChange\(.*?\n//msg;
-    s/^\s*onDateFromChange\(.*?\n//msg;
-    s/^\s*onDateToChange\(.*?\n//msg;
-    s/^\s*onMinAmountChange\(.*?\n//msg;
-    s/^\s*onMaxAmountChange\(.*?\n//msg;
-    s/^\s*onSortChange\(.*?\n//msg;
-    s/^\s*clearFilters\(.*?\n//msg;
-    s/^\s*toggleForm\(.*?\n//msg; # Ajout de toggleForm
+    # Supprime anciennes versions
+    s{\n\s*(\/\/.*?|\/\*.*?\*\/)?\s*(async\s+)?getProductName\(productId:\s*string\).*?^\s*\}\n}{}msg;
+    s{\n\s*(\/\/.*?|\/\*.*?\*\/)?\s*(async\s+)?getDescription\(productId:\s*string\).*?^\s*\}\n}{}msg;
 
-    # Réinsérer les déclarations après une ligne connue (ajuster si besoin)
-    s{(expandedVoucherId:\s*string\s*\|\s*null\s*=\s*null;)}
-     {$1
-
-      \n  // Filtres
-      searchTerm = \x27\x27;
-      searchTerm$ = new BehaviorSubject<string>(\x27\x27);
-      selectedSupplier: string | null = null;
-      selectedSupplier$ = new BehaviorSubject<string | null>(null);
-      dateFrom: string | null = null;
-      dateFrom$ = new BehaviorSubject<string | null>(null);
-      dateTo: string | null = null;
-      dateTo$ = new BehaviorSubject<string | null>(null);
-      minAmount: number | null = null;
-      minAmount$ = new BehaviorSubject<number | null>(null);
-      maxAmount: number | null = null;
-      maxAmount$ = new BehaviorSubject<number | null>(null);
-      sortBy: \x27date\x27 | \x27supplier\x27 | \x27amount\x27 = \x27date\x27;
-      sortBy$ = new BehaviorSubject<\x27date\x27 | \x27supplier\x27 | \x27amount\x27>(\x27date\x27);
-      sortOrder: \x27asc\x27 | \x27desc\x27 = \x27desc\x27;
-      sortOrder$ = new BehaviorSubject<\x27asc\x27 | \x27desc\x27>(\x27desc\x27);
+    # Ajoute les versions synchrones correctes avant la dernière accolade de classe
+    s{(\n\s*\}\s*$)}
       \n
-      constructor(
-    }m;
-
-    # Réinsérer les méthodes avant la méthode onSubmit (ou une autre méthode connue)
-     s{(^\s*onSubmit\(\):\s*void\s*\{)}
-      {
-      \n  // Méthodes filtres
-      onSearchChange(term: string): void {
-        this.searchTerm = term;
-        this.searchTerm$.next(term);
-      }
-
-      onSupplierFilterChange(supplier: string | null): void {
-        this.selectedSupplier = supplier;
-        this.selectedSupplier$.next(supplier);
-      }
-
-      onDateFromChange(date: string | null): void {
-        this.dateFrom = date;
-        this.dateFrom$.next(date);
-      }
-
-      onDateToChange(date: string | null): void {
-        this.dateTo = date;
-        this.dateTo$.next(date);
-      }
-
-      onMinAmountChange(amount: number | null): void {
-        this.minAmount = amount;
-        this.minAmount$.next(amount);
-      }
-
-      onMaxAmountChange(amount: number | null): void {
-        this.maxAmount = amount;
-        this.maxAmount$.next(amount);
-      }
-
-      onSortChange(sortBy: \x27date\x27 | \x27supplier\x27 | \x27amount\x27): void {
-        if (this.sortBy === sortBy) {
-          this.sortOrder = this.sortOrder === \x27asc\x27 ? \x27desc\x27 : \x27asc\x27;
-        } else {
-          this.sortBy = sortBy;
-          this.sortOrder = this.sortBy === \x27date\x27 ? \x27desc\x27 : \x27asc\x27;
-        }
-        this.sortBy$.next(this.sortBy);
-        this.sortOrder$.next(this.sortOrder);
-      }
-
-      clearFilters(): void {
-        this.searchTerm = \x27\x27;
-        this.searchTerm$.next(\x27\x27);
-        this.selectedSupplier = null;
-        this.selectedSupplier$.next(null);
-        this.dateFrom = null;
-        this.dateFrom$.next(null);
-        this.dateTo = null;
-        this.dateTo$.next(null);
-        this.minAmount = null;
-        this.minAmount$.next(null);
-        this.maxAmount = null;
-        this.maxAmount$.next(null);
-        this.sortBy = \x27date\x27;
-        this.sortBy$.next(\x27date\x27);
-        this.sortOrder = \x27desc\x27;
-        this.sortOrder$.next(\x27desc\x27);
-      }
-
-      toggleForm(): void {
-        this.showForm = !this.showForm;
-        if (!this.showForm) {
-          this.resetForm();
-        }
+      getProductName(productId: string): string {
+        const product = this.productList.find(p => p.id === productId);
+        return product ? product.name : "Produit_Inconnu";
       }
       \n
-      $1 # Réinsère le début de onSubmit
-    }m;
+      getDescription(productId: string): string {
+        const prod = this.productList.find(p => p.id === productId);
+        return prod?.description \|\| "Pas_de_description";
+      }
+    $1}m;
+' "$TS_FILE"
+echo -e "${GREEN}    ✓ Méthodes getProductName et getDescription réécrites.${NC}"
 
-    # Assurer que ngOnInit existe (très important!)
-    unless (/ngOnInit\(\):\s*void\s*\{/) {
-      s{(constructor\(.*?\)\s*\{.*?\})\s*\n}
-       {$1\n\n  ngOnInit(): void {\n    // Mettez ici le contenu original de ngOnInit si vous l aviez\n    this.loadVouchers();\n    this.products$ = this.productsService.getProducts();\n    this.products$.subscribe((products) => {\n      this.productList = products;\n    });\n    this.suppliers$ = this.suppliersService.getSuppliers();\n\n    // Initialisation filteredVouchers$ (copié depuis un état fonctionnel)\n    this.filteredVouchers$ = combineLatest([\n      this.vouchers$,\n      this.searchTerm$,\n      this.selectedSupplier$,\n      this.dateFrom$,\n      this.dateTo$,\n      this.minAmount$,\n      this.maxAmount$,\n      this.sortBy$,\n      this.sortOrder$,\n    ]).pipe(\n      map(\n        ([vouchers, term, supplier, dateFrom, dateTo, minAmount, maxAmount, sortBy, sortOrder]) => {\n          let filtered = vouchers;\n          if (term) {\n            filtered = filtered.filter((v) =>\n              v.voucherNumber.toLowerCase().includes(term.toLowerCase()),\n            );\n          }\n          if (supplier) {\n            filtered = filtered.filter((v) => v.supplier === supplier);\n          }\n          if (dateFrom) {\n            const fromDate = new Date(dateFrom);\n            filtered = filtered.filter((v) => {\n              const vDate = v.date instanceof Timestamp ? v.date.toDate() : new Date(v.date);\n              return vDate >= fromDate;\n            });\n          }\n          if (dateTo) {\n            const toDate = new Date(dateTo);\n            toDate.setHours(23, 59, 59);\n            filtered = filtered.filter((v) => {\n              const vDate = v.date instanceof Timestamp ? v.date.toDate() : new Date(v.date);\n              return vDate <= toDate;\n            });\n          }\n          if (minAmount !== null) {\n            filtered = filtered.filter((v) => (v.totalAmount \|\| 0) >= minAmount);\n          }\n          if (maxAmount !== null) {\n            filtered = filtered.filter((v) => (v.totalAmount \|\| 0) <= maxAmount);\n          }\n          filtered = filtered.sort((a, b) => {\n            let compareValue = 0;\n            if (sortBy === \x27date\x27) {\n              const dateA =\n                a.date instanceof Timestamp\n                  ? a.date.toDate().getTime()\n                  : new Date(a.date).getTime();\n              const dateB =\n                b.date instanceof Timestamp\n                  ? b.date.toDate().getTime()\n                  : new Date(b.date).getTime();\n              compareValue = dateA - dateB;\n            } else if (sortBy === \x27supplier\x27) {\n              compareValue = a.supplier.localeCompare(b.supplier);\n            } else if (sortBy === \x27amount\x27) {\n              compareValue = (a.totalAmount \|\| 0) - (b.totalAmount \|\| 0);\n            }\n            return sortOrder === \x27asc\x27 ? compareValue : -compareValue;\n          });\n          return filtered;\n        },\n      ),\n    );\n\n  }\n\n}m; # Fin de l ajout de ngOnInit
-    }
+# 3. Ajouter getSubtotal si elle manque
+echo "  → Vérification/Ajout de getSubtotal..."
+if ! grep -q "getSubtotal(line: any): number" "$TS_FILE"; then
+    perl -i -0777 -pe '
+    s{(\n\s*\}\s*$)}
+      \n
+      getSubtotal(line: any): number {
+        const quantity = line && typeof line.quantity === "number" ? line.quantity : 0;
+        const unitPrice = line && typeof line.unitPrice === "number" ? line.unitPrice : 0;
+        return quantity * unitPrice;
+      }
+    $1}m;
+    ' "$TS_FILE"
+    echo -e "${GREEN}    ✓ Méthode getSubtotal ajoutée.${NC}"
+else
+    echo -e "${YELLOW}    ✓ Méthode getSubtotal déjà présente.${NC}"
+fi
 
+
+# 4. Réécrire COMPLETEMENT le bloc .map() dans onSubmit pour recherche synchrone directe
+echo "  → Réécriture du bloc .map() dans onSubmit..."
+perl -i -0777 -pe '
+  s{
+    (^\s*const\s+productsWithNames.*?formValue\.products\.map\(\s*\(p:\s*any\)\s*=>\s*)
+    .*? # Contenu potentiellement corrompu
+    (;\s*$) # Fin de l instruction map
+  }
+  {
+    $1 . # Colle le début
+    # --- Code correct pour la fonction map ---
+    "{\n" .
+    "      const product = this.productList.find(prod => prod.id === p.productId);\n" .
+    "      const productName = product ? product.name : \x27Produit_Inconnu\x27;\n" .
+    "      const description = product ? (product.description \|\| \x27Pas_de_description\x27) : \x27Pas_de_description\x27;\n" .
+    "      const subtotal = (p.quantity \|\| 0) * (p.unitPrice \|\| 0);\n" .
+    "\n" .
+    "      return {\n" .
+    "        ...p,\n" .
+    "        productName: productName,\n" .
+    "        description: description,\n" .
+    "        subtotal: subtotal,\n" .
+    "      };\n" .
+    "    })" . # Fin de la fonction map et de l appel à map()
+    # --- Fin Code correct ---
+    $2 # Colle la fin ;
+  }meg;
 ' "$TS_FILE"
 
-echo -e "${GREEN}    ✓ Propriétés et méthodes de filtrage réinsérées.${NC}"
-echo -e "${GREEN}    ✓ Présence de ngOnInit assurée.${NC}"
+# Vérification
+if grep -q "const product = this.productList.find(prod => prod.id === p.productId);" "$TS_FILE" && grep -q "productName: productName," "$TS_FILE" && grep -q "description: description," "$TS_FILE"; then
+    echo -e "${GREEN}    ✓ Bloc .map() dans onSubmit réécrit avec recherche synchrone directe.${NC}"
+else
+    echo -e "${RED}    ✗ Échec de la réécriture du bloc .map(). Vérification manuelle requise.${NC}"
+fi
+
+# --- Modifier le fichier HTML (.html) ---
+echo "  → Modification de $HTML_FILE..."
+
+# Remplacer les appels DANS LA BOUCLE *ngFor de l'expansion
+perl -i -0777 -pe '
+  s{
+    # Début section et ligne *ngFor
+    (\*ngIf="expandedVoucherId\s*===\s*voucher\.id".*?<tr\s+\*ngFor="let\s+line\s+of\s+voucher\?\.products\s*\|\|\s*\[\]".*?>)
+    (.*?) # Contenu de la boucle
+    (</tr>) # Fin de la ligne tr
+  }
+  {
+    my $start = $1;
+    my $content = $2;
+    my $end = $3;
+    # Remplacements ciblés
+    $content =~ s/\{\{\s*getProductName\(line\.productId\)\s*\}\}/{{ line.productName }}/g;
+    $content =~ s/\{\{\s*getDescription\(line\.productId\)\s*\}\}/{{ line.description }}/g;
+    $content =~ s/\{\{\s*getSubtotal\(line\)\s*\|\s*number:\s*'\''1\.2-2'\''\s*\}\}/{{ line.subtotal | number:\x271.2-2\x27 }}/g;
+    # Tentative de réorganisation des TDs (basée sur la structure probable: ID, Nom, Desc, Qte, PU, ST)
+    # SI VOTRE ORDRE EST DIFFERENT, AJUSTEZ MANUELLEMENT LE HTML APRES LE SCRIPT
+    $content =~ s{
+        # Capture les TDs existantes (flexible)
+        .*?
+        (<td.*?\/td>\s*) # TD 1 (supposé ID)
+        (<td.*?\/td>\s*) # TD 2 (supposé Ancien Nom/Desc)
+        (<td.*?\/td>\s*) # TD 3 (supposé Ancien Nom/Desc ou Quantité)
+        (<td.*?\/td>\s*) # TD 4 (supposé Quantité ou Prix)
+        (<td.*?\/td>\s*) # TD 5 (supposé Prix ou Sous-total)
+        (<td.*?\/td>\s*) # TD 6 (supposé Sous-total)
+        .*?
+    }
+    { # Réécrit les TDs dans l ordre attendu avec les bonnes variables
+        qq{
+            <td class="px-4 py-2 text-xs font-mono">{{ line.productId }}</td>
+            <td class="px-4 py-2">{{ line.productName }}</td>
+            <td class="px-4 py-2 description">{{ line.description }}</td>
+            <td class="px-4 py-2">{{ line.quantity }}</td>
+            <td class="px-4 py-2">{{ line.unitPrice | number:'1.2-2' }} DT</td>
+            <td class="px-4 py-2 font-semibold">{{ line.subtotal | number:'1.2-2' }} DT</td>
+        }
+    }sxe;
+
+    $start . $content . $end;
+  }gsex;
+' "$HTML_FILE"
+
+echo -e "${GREEN}    ✓ Template HTML modifié pour utiliser les propriétés directes dans l'expansion (vérifiez l'ordre des TDs).${NC}"
 
 
-echo -e "\n${GREEN}=== Réparation Terminée ===${NC}"
-echo "Le fichier '$TS_FILE' a été modifié pour réinsérer les définitions manquantes."
-echo "**ACTION REQUISE :** Vérifiez attentivement le fichier '$TS_FILE' pour vous assurer qu'il n'y a pas d'erreurs de syntaxe ou de duplications."
-echo "Assurez-vous que le contenu de 'ngOnInit' est correct (le script a inséré un contenu par défaut s'il manquait)."
-echo "Ensuite, arrêtez et relancez 'ng serve'."
+echo -e "\n${GREEN}=== Script Terminé ===${NC}"
+echo "Les fichiers '$TS_FILE' et '$HTML_FILE' ont été modifiés."
+echo "**ACTION REQUISE :** Vérifiez manuellement la structure des `<td>` dans la boucle `*ngFor` de `$HTML_FILE` (section \*ngIf=\"expandedVoucherId === voucher.id\") pour vous assurer que l'ordre des colonnes (ID, Nom, Description, Quantité, Prix Unit., Sous-total) est correct."
+echo "Relancez 'ng serve' et testez à nouveau."
