@@ -1,186 +1,104 @@
 #!/bin/bash
 
-# Script COMPLET pour corriger productName/description et boucle infinie
-# dans ExitVoucherComponent (.ts et .html)
+# Script pour auto-remplir le prix unitaire lors de la sélection du produit
+# SPÉCIFIQUEMENT pour EntryVoucherComponent
 
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
-NC='\033[0m'
+NC='\033[0m' # No Color
 
-echo -e "${YELLOW}=== Correction Complète ExitVoucherComponent ===${NC}\n"
+echo -e "${YELLOW}=== Ajout Auto-remplissage Prix Unitaire (Bon d'Entrée) ===${NC}\n"
 
-TS_FILE="./src/app/components/exit-voucher/exit-voucher.component.ts"
-HTML_FILE="./src/app/components/exit-voucher/exit-voucher.component.html"
+TS_FILE="./src/app/components/entry-voucher/entry-voucher.component.ts"
+HTML_FILE="./src/app/components/entry-voucher/entry-voucher.component.html"
+COMPONENT_NAME="EntryVoucherComponent"
 
 # --- Vérifier les fichiers ---
 if [ ! -f "$TS_FILE" ]; then echo -e "${RED}ERREUR: $TS_FILE introuvable.${NC}"; exit 1; fi
 if [ ! -f "$HTML_FILE" ]; then echo -e "${RED}ERREUR: $HTML_FILE introuvable.${NC}"; exit 1; fi
 
 # --- Créer backups ---
-echo "  → Création backups (.bak.exit_complete_fix)..."
-cp "$TS_FILE" "$TS_FILE.bak.exit_complete_fix"
-cp "$HTML_FILE" "$HTML_FILE.bak.exit_complete_fix"
+echo "  → Création backups (.bak.autoprice_entry)..."
+cp "$TS_FILE" "$TS_FILE.bak.autoprice_entry"
+cp "$HTML_FILE" "$HTML_FILE.bak.autoprice_entry"
 
 # --- Modifier le fichier TypeScript (.ts) ---
-echo "  → Modification de $TS_FILE..."
+echo "  → Modification de $COMPONENT_NAME ($TS_FILE)..."
 
-# 1. Assurer la présence et l'initialisation de productList
-if ! grep -q "productList: Product\[\] = \[\];" "$TS_FILE"; then
-    if ! grep -q 'products\$!: Observable<Product\[\]>;' "$TS_FILE"; then
-        echo -e "${YELLOW}    ⚠ Ligne 'products$!: Observable<Product[]>;' non trouvée. L'ajout de productList pourrait échouer.${NC}"
-    else
-        sed -i.tmp '/products\$!: Observable<Product\[\]>;/a\
-  productList: Product[] = []; // Cache synchrone' "$TS_FILE" && rm "${TS_FILE}.tmp"
-        echo -e "${GREEN}    ✓ Propriété productList ajoutée.${NC}"
-    fi
+# Vérifier si la méthode onProductSelected existe déjà
+if grep -q "onProductSelected(event: Event, index: number)" "$TS_FILE"; then
+    echo -e "${YELLOW}    ✓ Méthode onProductSelected déjà présente.${NC}"
 else
-    echo -e "${YELLOW}    ✓ Propriété productList déjà présente.${NC}"
-fi
-if ! grep -q "this\.productList = products;" "$TS_FILE"; then
-    if ! grep -q 'this\.products\$ = this\.productsService\.getProducts();' "$TS_FILE"; then
-         echo -e "${YELLOW}    ⚠ Ligne 'this.products$ = this.productsService.getProducts();' non trouvée. L'ajout du subscribe pourrait échouer.${NC}"
-    else
-        # Insère le subscribe s'il manque dans ngOnInit
-        perl -i -0777 -pe '
-          s{(ngOnInit\(\):\s*void\s*\{.*?)(\n\s*this\.products\$ = this\.productsService\.getProducts\(\);)}
-           {$1$2\n    this.products$.subscribe((products) => {\n      this.productList = products;\n    });}s
-        ' "$TS_FILE"
-        echo -e "${GREEN}    ✓ Initialisation de productList dans ngOnInit ajoutée/vérifiée.${NC}"
-    fi
-else
-     echo -e "${YELLOW}    ✓ Initialisation de productList déjà présente.${NC}"
-fi
-
-# 2. Réécrire COMPLETEMENT getProductName et getDescription pour garantir l'utilisation de productList
-echo "  → Réécriture de getProductName et getDescription (synchrones)..."
-perl -i -0777 -pe '
-    # Supprime anciennes versions
-    s{\n\s*(\/\/.*?|\/\*.*?\*\/)?\s*(async\s+)?getProductName\(productId:\s*string\).*?^\s*\}\n}{}msg;
-    s{\n\s*(\/\/.*?|\/\*.*?\*\/)?\s*(async\s+)?getDescription\(productId:\s*string\).*?^\s*\}\n}{}msg;
-
-    # Ajoute les versions synchrones correctes avant la dernière accolade de classe
-    s{(\n\s*\}\s*$)}
-      \n
-      getProductName(productId: string): string {
-        const product = this.productList.find(p => p.id === productId);
-        return product ? product.name : "Produit_Inconnu";
-      }
-      \n
-      getDescription(productId: string): string {
-        const prod = this.productList.find(p => p.id === productId);
-        return prod?.description \|\| "Pas_de_description";
-      }
-    $1}m;
-' "$TS_FILE"
-echo -e "${GREEN}    ✓ Méthodes getProductName et getDescription réécrites.${NC}"
-
-# 3. Ajouter getSubtotal si elle manque
-echo "  → Vérification/Ajout de getSubtotal..."
-if ! grep -q "getSubtotal(line: any): number" "$TS_FILE"; then
+    # Ajouter la méthode onProductSelected avant addProductLine
     perl -i -0777 -pe '
-    s{(\n\s*\}\s*$)}
-      \n
-      getSubtotal(line: any): number {
-        const quantity = line && typeof line.quantity === "number" ? line.quantity : 0;
-        const unitPrice = line && typeof line.unitPrice === "number" ? line.unitPrice : 0;
-        return quantity * unitPrice;
+      s{
+        # Trouve le début de la méthode addProductLine
+        (^\s*addProductLine\(\):\s*void\s*\{)
       }
-    $1}m;
+      {
+        # Insère la nouvelle méthode AVANT addProductLine
+        qq{\n
+          onProductSelected(event: Event, index: number): void {
+            const selectElement = event.target as HTMLSelectElement;
+            const productId = selectElement.value;
+            const productLine = this.productsFormArray.at(index);
+
+            if (!productId || !productLine) {
+              productLine?.patchValue({ unitPrice: 0 }); // Reset prix si pas de sélection
+              return;
+            }
+
+            // Trouve le produit dans la liste synchrone productList
+            const selectedProduct = this.productList.find(p => p.id === productId);
+
+            if (selectedProduct) {
+              // Met à jour le prix unitaire dans le formulaire pour cette ligne
+              productLine.patchValue({ unitPrice: selectedProduct.price });
+            } else {
+              // Si produit non trouvé (devrait pas arriver si productList est à jour)
+              productLine.patchValue({ unitPrice: 0 });
+              console.warn(`Produit non trouvé dans productList: ${productId}`);
+            }
+          }
+          \n\n
+        } . $1 # Réinsère le début de addProductLine trouvé
+      }me; # m=multiligne, e=eval replacement
     ' "$TS_FILE"
-    echo -e "${GREEN}    ✓ Méthode getSubtotal ajoutée.${NC}"
-else
-    echo -e "${YELLOW}    ✓ Méthode getSubtotal déjà présente.${NC}"
-fi
 
-
-# 4. Réécrire COMPLETEMENT le bloc .map() dans onSubmit pour recherche synchrone directe
-echo "  → Réécriture du bloc .map() dans onSubmit..."
-perl -i -0777 -pe '
-  s{
-    (^\s*const\s+productsWithNames.*?formValue\.products\.map\(\s*\(p:\s*any\)\s*=>\s*)
-    .*? # Contenu potentiellement corrompu
-    (;\s*$) # Fin de l instruction map
-  }
-  {
-    $1 . # Colle le début
-    # --- Code correct pour la fonction map ---
-    "{\n" .
-    "      const product = this.productList.find(prod => prod.id === p.productId);\n" .
-    "      const productName = product ? product.name : \x27Produit_Inconnu\x27;\n" .
-    "      const description = product ? (product.description \|\| \x27Pas_de_description\x27) : \x27Pas_de_description\x27;\n" .
-    "      const subtotal = (p.quantity \|\| 0) * (p.unitPrice \|\| 0);\n" .
-    "\n" .
-    "      return {\n" .
-    "        ...p,\n" .
-    "        productName: productName,\n" .
-    "        description: description,\n" .
-    "        subtotal: subtotal,\n" .
-    "      };\n" .
-    "    })" . # Fin de la fonction map et de l appel à map()
-    # --- Fin Code correct ---
-    $2 # Colle la fin ;
-  }meg;
-' "$TS_FILE"
-
-# Vérification
-if grep -q "const product = this.productList.find(prod => prod.id === p.productId);" "$TS_FILE" && grep -q "productName: productName," "$TS_FILE" && grep -q "description: description," "$TS_FILE"; then
-    echo -e "${GREEN}    ✓ Bloc .map() dans onSubmit réécrit avec recherche synchrone directe.${NC}"
-else
-    echo -e "${RED}    ✗ Échec de la réécriture du bloc .map(). Vérification manuelle requise.${NC}"
+    # Vérification
+    if grep -q "onProductSelected(event: Event, index: number)" "$TS_FILE"; then
+        echo -e "${GREEN}    ✓ Méthode onProductSelected ajoutée.${NC}"
+    else
+        echo -e "${RED}    ✗ Échec de l'ajout de la méthode onProductSelected. Vérification manuelle requise.${NC}"
+    fi
 fi
 
 # --- Modifier le fichier HTML (.html) ---
-echo "  → Modification de $HTML_FILE..."
+echo "  → Modification du template $COMPONENT_NAME ($HTML_FILE)..."
 
-# Remplacer les appels DANS LA BOUCLE *ngFor de l'expansion
-perl -i -0777 -pe '
-  s{
-    # Début section et ligne *ngFor
-    (\*ngIf="expandedVoucherId\s*===\s*voucher\.id".*?<tr\s+\*ngFor="let\s+line\s+of\s+voucher\?\.products\s*\|\|\s*\[\]".*?>)
-    (.*?) # Contenu de la boucle
-    (</tr>) # Fin de la ligne tr
-  }
-  {
-    my $start = $1;
-    my $content = $2;
-    my $end = $3;
-    # Remplacements ciblés
-    $content =~ s/\{\{\s*getProductName\(line\.productId\)\s*\}\}/{{ line.productName }}/g;
-    $content =~ s/\{\{\s*getDescription\(line\.productId\)\s*\}\}/{{ line.description }}/g;
-    $content =~ s/\{\{\s*getSubtotal\(line\)\s*\|\s*number:\s*'\''1\.2-2'\''\s*\}\}/{{ line.subtotal | number:\x271.2-2\x27 }}/g;
-    # Tentative de réorganisation des TDs (basée sur la structure probable: ID, Nom, Desc, Qte, PU, ST)
-    # SI VOTRE ORDRE EST DIFFERENT, AJUSTEZ MANUELLEMENT LE HTML APRES LE SCRIPT
-    $content =~ s{
-        # Capture les TDs existantes (flexible)
-        .*?
-        (<td.*?\/td>\s*) # TD 1 (supposé ID)
-        (<td.*?\/td>\s*) # TD 2 (supposé Ancien Nom/Desc)
-        (<td.*?\/td>\s*) # TD 3 (supposé Ancien Nom/Desc ou Quantité)
-        (<td.*?\/td>\s*) # TD 4 (supposé Quantité ou Prix)
-        (<td.*?\/td>\s*) # TD 5 (supposé Prix ou Sous-total)
-        (<td.*?\/td>\s*) # TD 6 (supposé Sous-total)
-        .*?
-    }
-    { # Réécrit les TDs dans l ordre attendu avec les bonnes variables
-        qq{
-            <td class="px-4 py-2 text-xs font-mono">{{ line.productId }}</td>
-            <td class="px-4 py-2">{{ line.productName }}</td>
-            <td class="px-4 py-2 description">{{ line.description }}</td>
-            <td class="px-4 py-2">{{ line.quantity }}</td>
-            <td class="px-4 py-2">{{ line.unitPrice | number:'1.2-2' }} DT</td>
-            <td class="px-4 py-2 font-semibold">{{ line.subtotal | number:'1.2-2' }} DT</td>
-        }
-    }sxe;
+# Ajouter (change)="onProductSelected($event, i)" au select du productId s'il n'existe pas déjà
+if ! grep -q '(change)="onProductSelected($event, i)"' "$HTML_FILE"; then
+  # Utilise perl pour plus de robustesse avec les sauts de ligne potentiels
+  perl -i -pe '
+    s{(<select\s+formControlName="productId"\s*.*?)(>) # Capture le début de la balise select et la fin >
+     }
+     {$1 . q{ (change)="onProductSelected($event, i)"} . $2 # Insère l événement avant le > final
+     }ge; # g=global, e=eval
+  ' "$HTML_FILE"
 
-    $start . $content . $end;
-  }gsex;
-' "$HTML_FILE"
-
-echo -e "${GREEN}    ✓ Template HTML modifié pour utiliser les propriétés directes dans l'expansion (vérifiez l'ordre des TDs).${NC}"
-
+   # Vérification
+    if grep -q '(change)="onProductSelected($event, i)"' "$HTML_FILE"; then
+         echo -e "${GREEN}    ✓ Événement (change) ajouté au select productId.${NC}"
+    else
+         echo -e "${RED}    ✗ Échec de l'ajout de l'événement (change). Vérification manuelle requise.${NC}"
+    fi
+else
+    echo -e "${YELLOW}    ✓ Événement (change) déjà présent sur select productId.${NC}"
+fi
 
 echo -e "\n${GREEN}=== Script Terminé ===${NC}"
-echo "Les fichiers '$TS_FILE' et '$HTML_FILE' ont été modifiés."
-echo "**ACTION REQUISE :** Vérifiez manuellement la structure des `<td>` dans la boucle `*ngFor` de `$HTML_FILE` (section \*ngIf=\"expandedVoucherId === voucher.id\") pour vous assurer que l'ordre des colonnes (ID, Nom, Description, Quantité, Prix Unit., Sous-total) est correct."
-echo "Relancez 'ng serve' et testez à nouveau."
+echo "Le composant Bon d'Entrée a été modifié."
+echo "Le prix unitaire devrait maintenant se remplir automatiquement lors de la sélection du produit."
+echo "Des backups (.bak.autoprice_entry) ont été créés."
+echo "Vérifiez les modifications et relancez 'ng serve'."
