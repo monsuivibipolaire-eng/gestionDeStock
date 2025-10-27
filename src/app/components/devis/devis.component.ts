@@ -26,7 +26,7 @@ export class DevisComponent implements OnInit {
   devisList$!: Observable<Devis[]>;
   filteredDevis$!: Observable<Devis[]>;
   products$!: Observable<Product[]>;
-  customers$!: Observable<Customer[]>; // Correctly declared
+  customers$!: Observable<Customer[]>;
   productList: Product[] = []; // Synchronous cache
 
   // Form and state
@@ -76,7 +76,7 @@ export class DevisComponent implements OnInit {
       validUntil: [validUntil.toISOString().split('T')[0]],
       products: this.fb.array([this.createProductLine()]),
       notes: [''],
-      status: ['draft', Validators.required] // Default status is draft
+      status: ['draft', Validators.required]
     });
   }
 
@@ -87,7 +87,7 @@ export class DevisComponent implements OnInit {
     this.products$.subscribe((products) => {
       this.productList = products;
     });
-    this.customers$ = this.customersService.getCustomers(); // Initialize customers$
+    this.customers$ = this.customersService.getCustomers();
 
     // Setup the filtered observable pipeline
     this.filteredDevis$ = combineLatest([
@@ -136,7 +136,7 @@ export class DevisComponent implements OnInit {
           filtered = filtered.filter(d => (d.totalAmount || 0) <= maxAmount);
         }
         if (status !== 'all') {
-          filtered = filtered.filter(d => (d.status || 'draft') === status); // Default to draft if undefined
+          filtered = filtered.filter(d => (d.status || 'draft') === status);
         }
 
         // Apply sorting
@@ -182,7 +182,6 @@ export class DevisComponent implements OnInit {
     }
   }
 
-  // Method called on product selection change in the form
   onProductSelected(event: Event, index: number): void {
     const selectElement = event.target as HTMLSelectElement;
     const productId = selectElement.value;
@@ -202,7 +201,7 @@ export class DevisComponent implements OnInit {
   }
 
   calculateSubtotal(index: number): number {
-    const line = this.productsFormArray.at(index)?.value; // Added safe navigation
+    const line = this.productsFormArray.at(index)?.value;
     return (line?.quantity || 0) * (line?.unitPrice || 0);
   }
 
@@ -259,7 +258,7 @@ export class DevisComponent implements OnInit {
       this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
     } else {
       this.sortBy = sortBy;
-      this.sortOrder = this.sortBy === 'date' ? 'desc' : 'asc'; // Default sort order change based on column
+      this.sortOrder = this.sortBy === 'date' ? 'desc' : 'asc';
     }
     this.sortBy$.next(this.sortBy);
     this.sortOrder$.next(this.sortOrder);
@@ -313,13 +312,10 @@ export class DevisComponent implements OnInit {
     };
 
     if (formValue.validUntil) {
-      // Ensure validUntil is not empty before converting
       try {
         devisData.validUntil = Timestamp.fromDate(new Date(formValue.validUntil));
       } catch (e) {
         console.warn("Invalid date format for validUntil:", formValue.validUntil);
-        // Optionally handle the error, e.g., set to null or keep it undefined
-        // devisData.validUntil = null;
       }
     }
 
@@ -415,7 +411,7 @@ export class DevisComponent implements OnInit {
     this.expandedDevisId = this.expandedDevisId === devisId ? null : devisId;
   }
 
-  // --- Helper Methods (Moved outside property declarations) ---
+  // --- Helper Methods ---
   getProductName(productId: string): string {
     const product = this.productList.find(p => p.id === productId);
     return product ? product.name : "Produit_Inconnu";
@@ -438,13 +434,13 @@ export class DevisComponent implements OnInit {
     if (timestamp instanceof Timestamp) {
       date = timestamp.toDate();
     } else {
-      date = new Date(timestamp); // Attempt to parse if it's a string/number
+      date = new Date(timestamp);
     }
     return !isNaN(date.getTime()) ? date.toLocaleDateString('fr-FR') : '-';
   }
 
-  getStatusLabel(status?: string): string { // Made status optional
-    const effectiveStatus = status || 'draft'; // Default to draft
+  getStatusLabel(status?: string): string {
+    const effectiveStatus = status || 'draft';
     const labels: any = {
       draft: 'Brouillon',
       sent: 'Envoyé',
@@ -454,8 +450,8 @@ export class DevisComponent implements OnInit {
     return labels[effectiveStatus] || effectiveStatus;
   }
 
-  getStatusClass(status?: string): string { // Made status optional
-    const effectiveStatus = status || 'draft'; // Default to draft
+  getStatusClass(status?: string): string {
+    const effectiveStatus = status || 'draft';
     const classes: any = {
       draft: 'bg-gray-100 text-gray-800',
       sent: 'bg-blue-100 text-blue-800',
@@ -465,10 +461,11 @@ export class DevisComponent implements OnInit {
     return classes[effectiveStatus] || 'bg-gray-100 text-gray-800';
   }
 
-  // --- Print Methods (Skeletons - need implementation) ---
+
+  // --- Print Methods ---
   printList(): void {
     this.filteredDevis$.pipe(take(1)).subscribe(devisList => {
-      if (!devisList || devisList.length === 0) { // Added check for undefined
+      if (!devisList || devisList.length === 0) {
         alert('Aucun devis à imprimer.');
         return;
       }
@@ -476,21 +473,215 @@ export class DevisComponent implements OnInit {
     });
   }
 
+  // **** CORRECTED generatePrintHTML METHOD ****
   generatePrintHTML(devisList: Devis[]): void {
-    // ... (Implementation for printing list - needs adaptation from entry/exit/purchase) ...
-    console.log('Generating print HTML for list:', devisList);
-    alert('Logic for generatePrintHTML needs to be implemented/adapted.');
+    const printWindow = window.open("", "_blank", "width=900,height=700");
+    if (!printWindow) {
+      alert("❌ Popup bloquée !");
+      return;
+    }
+
+    const today = new Date().toLocaleDateString("fr-FR", {
+      year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit"
+    });
+
+    const totalDevis = devisList.length;
+    const totalAmount = devisList.reduce((sum, d) => sum + (d.totalAmount || 0), 0);
+    const totalProducts = devisList.reduce((sum, d) => sum + d.products.length, 0);
+    const statusCounts = {
+      draft: devisList.filter(d => (d.status || 'draft') === 'draft').length,
+      sent: devisList.filter(d => d.status === 'sent').length,
+      accepted: devisList.filter(d => d.status === 'accepted').length,
+      rejected: devisList.filter(d => d.status === 'rejected').length
+    };
+
+    const filters: string[] = [];
+    if (this.searchTerm) filters.push(`Recherche: "${this.searchTerm}"`);
+    if (this.selectedCustomer) filters.push(`Client: ${this.selectedCustomer}`);
+    if (this.dateFrom) filters.push(`Date Début: ${new Date(this.dateFrom).toLocaleDateString('fr-FR')}`);
+    if (this.dateTo) filters.push(`Date Fin: ${new Date(this.dateTo).toLocaleDateString('fr-FR')}`);
+    if (this.minAmount !== null) filters.push(`Montant Min: ${this.minAmount} DT`);
+    if (this.maxAmount !== null) filters.push(`Montant Max: ${this.maxAmount} DT`);
+    if (this.statusFilter !== 'all') filters.push(`Statut: ${this.getStatusLabel(this.statusFilter)}`);
+    const sortLabels: any = { date: "Date", customer: "Client", amount: "Montant" };
+    filters.push(`Tri: ${sortLabels[this.sortBy]} (${this.sortOrder === "asc" ? "↑" : "↓"})`);
+
+    const rows = devisList.map((d, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${d.quoteNumber}</td>
+        <td>${this.formatDate(d.date)}</td>
+        <td>${d.customer}</td>
+        <td>${d.products.length}</td>
+        <td><span class="badge badge-${d.status || 'draft'}">${this.getStatusLabel(d.status)}</span></td>
+        <td>${(d.totalAmount || 0).toFixed(2)} DT</td>
+      </tr>
+    `).join("");
+
+    // ** CORRECTED HTML STRING (No backslashes before ${...}) **
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Liste Devis - ${today}</title>
+        <style>
+          @page { margin: 15mm; size: A4 landscape; }
+          body { font-family: Arial, sans-serif; margin: 0; padding: 15px; font-size: 10pt; }
+          .header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #8b5cf6; padding-bottom: 10px; }
+          .header h1 { font-size: 20pt; color: #8b5cf6; margin: 0 0 5px 0; }
+          .filters { background: #f5f3ff; padding: 8px; margin-bottom: 12px; border-left: 3px solid #8b5cf6; }
+          .filters h3 { font-size: 11pt; margin: 0 0 5px 0; }
+          .filters ul { list-style: none; padding: 0; margin: 0; }
+          .filters li { font-size: 9pt; margin: 2px 0; }
+          .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; }
+          .stat { background: #f9fafb; border: 1px solid #e5e7eb; padding: 8px; text-align: center; }
+          .stat .label { font-size: 8pt; color: #666; }
+          .stat .value { font-size: 14pt; font-weight: bold; color: #8b5cf6; }
+          table { width: 100%; border-collapse: collapse; }
+          thead { background: #8b5cf6; color: white; }
+          th, td { padding: 6px 8px; text-align: left; border: 1px solid #ddd; font-size: 9pt; }
+          tbody tr:nth-child(even) { background: #f9fafb; }
+          tfoot { background: #f5f3ff; font-weight: bold; }
+          /* Badge styles for print */
+          .badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 8pt; font-weight: bold; border: 1px solid #ccc; background: #fff; color: #000;}
+          .badge-draft { border-color: #9ca3af; }
+          .badge-sent { border-color: #3b82f6; }
+          .badge-accepted { border-color: #10b981; }
+          .badge-rejected { border-color: #ef4444; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>📄 Devis - Liste</h1>
+          <p>Date d'impression : ${today}</p>
+        </div>
+        <div class="filters">
+          <h3>Filtres Appliqués</h3>
+          <ul>${filters.map(f => `<li>• ${f}</li>`).join("")}</ul>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="label">Total Devis</div><div class="value">${totalDevis}</div></div>
+          <div class="stat"><div class="label">Total Produits</div><div class="value">${totalProducts}</div></div>
+          <div class="stat"><div class="label">Montant Total</div><div class="value">${totalAmount.toFixed(2)} DT</div></div>
+          <div class="stat"><div class="label">Acceptés</div><div class="value">${statusCounts.accepted}</div></div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>#</th><th>N° Devis</th><th>Date</th><th>Client</th><th>Produits</th><th>Statut</th><th>Montant</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+          <tfoot>
+            <tr><td colspan="4">TOTAL (${totalDevis} devis)</td><td>${totalProducts}</td><td>-</td><td>${totalAmount.toFixed(2)} DT</td></tr>
+          </tfoot>
+        </table>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => printWindow.print(), 500);
   }
 
+  // **** CORRECTED printItem METHOD ****
   printItem(item: any): void {
-     this.filteredDevis$.pipe(take(1)).subscribe(devisList => {
-        if (!devisList) return;
-        const singleItem = devisList.find((d) => d.id === item.id);
-        if (!singleItem) return;
-        // ... (Implementation for printing single item - needs adaptation from entry/exit/purchase) ...
-        console.log('Generating print HTML for single item:', singleItem);
-        alert('Logic for printItem needs to be implemented/adapted.');
-     });
+    this.filteredDevis$.pipe(take(1)).subscribe(devisList => {
+      const devis = devisList.find(d => d.id === item.id);
+      if (!devis) {
+        console.error('Devis non trouvé pour impression:', item.id);
+        alert('Erreur : Devis non trouvé.');
+        return;
+      }
+
+      const printWindow = window.open("", "_blank", "width=800,height=600");
+      if (!printWindow) {
+        alert('❌ Popup bloquée ! Veuillez autoriser les popups pour ce site.');
+        return;
+      }
+
+      // Generate HTML for the single devis
+      const productRows = devis.products.map(p => `
+        <tr>
+          <td>${p.productName || 'N/A'}</td>
+          <td class="description">${this.getDescription(p.productId)}</td>
+          <td>${p.quantity || 0}</td>
+          <td>${(p.unitPrice || 0).toFixed(2)} DT</td>
+          <td>${(p.subtotal || 0).toFixed(2)} DT</td>
+        </tr>
+      `).join("");
+
+      // ** CORRECTED HTML STRING (No backslashes before ${...}) **
+      const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Devis ${devis.quoteNumber}</title>
+          <style>
+            /* Basic print styles - adapt colors if needed */
+            body { font-family: Arial, sans-serif; padding: 20px; font-size: 10pt; }
+            h1 { text-align: center; border-bottom: 2px solid #000; margin-bottom: 20px; padding-bottom: 10px; }
+            .details-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            .details-table th, .details-table td { padding: 8px; border: 1px solid #ddd; text-align: left; }
+            .details-table th { background: #f3f4f6; width: 30%; }
+            .products-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+            .products-table th, .products-table td { padding: 8px; border: 1px solid #ddd; text-align: left; }
+            .products-table th { background: #f3f4f6; }
+            .products-table tfoot th, .products-table tfoot td { font-weight: bold; background: #f5f3ff; } /* Light violet footer */
+            .description { font-size: 9pt; color: #555; font-style: italic; max-width: 200px; word-wrap: break-word; }
+            .total-amount { color: #8b5cf6; } /* Violet total */
+            /* Status badge styles for print */
+            .badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 8pt; font-weight: bold; border: 1px solid #ccc; background: #fff; color: #000;}
+            .badge-draft { border-color: #9ca3af; }
+            .badge-sent { border-color: #3b82f6; }
+            .badge-accepted { border-color: #10b981; }
+            .badge-rejected { border-color: #ef4444; }
+          </style>
+        </head>
+        <body>
+          <h1>Devis N° ${devis.quoteNumber}</h1>
+          <table class="details-table">
+            <tr><th>Date</th><td>${this.formatDate(devis.date)}</td></tr>
+            <tr><th>Client</th><td>${devis.customer}</td></tr>
+            ${devis.validUntil ? `<tr><th>Valide jusqu'au</th><td>${this.formatDate(devis.validUntil)}</td></tr>` : ''}
+            <tr><th>Statut</th><td><span class="badge badge-${devis.status || 'draft'}">${this.getStatusLabel(devis.status)}</span></td></tr>
+            ${devis.notes ? `<tr><th>Notes</th><td>${devis.notes}</td></tr>` : ''}
+          </table>
+          <h3>Produits</h3>
+          <table class="products-table">
+            <thead>
+              <tr>
+                <th>Produit</th>
+                <th>Description</th>
+                <th>Quantité</th>
+                <th>Prix Unit.</th>
+                <th>Sous-total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${productRows}
+            </tbody>
+            <tfoot>
+              <tr>
+                <th colspan="4" style="text-align: right;">Total</th>
+                <td class="total-amount">${(devis.totalAmount || 0).toFixed(2)} DT</td>
+              </tr>
+            </tfoot>
+          </table>
+        </body>
+        </html>
+      `;
+
+      printWindow.document.write(html);
+      printWindow.document.close();
+      setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+        // printWindow.close();
+      }, 250);
+    });
   }
 
 } // End of class DevisComponent

@@ -1,10 +1,7 @@
 <div class="container mx-auto px-4 py-8">
-  <h1 class="text-3xl font-bold text-gray-800 mb-6">Bons de Sortie (Multi-Produits)</h1>
+  <h1 class="text-3xl font-bold text-gray-800 mb-6">Bons de Sortie</h1>
 
-  <div
-    *ngIf="errorMessage"
-    class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"
-  >
+  <div *ngIf="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
     <strong>Erreur :</strong> {{ errorMessage }}
     <button (click)="errorMessage = ''" class="float-right">&times;</button>
   </div>
@@ -42,12 +39,11 @@
     </div>
   </div>
 
-  <!-- Filtres Avancés -->
   <div class="bg-white shadow-md rounded-lg p-4 mb-6 no-print">
     <h3 class="text-lg font-semibold mb-3 flex items-center">
       <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
-          stroke-linecap="round"
+           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
           d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
@@ -138,7 +134,6 @@
     </div>
   </div>
 
-  <!-- Formulaire (structure identique entry avec customer) -->
   <div *ngIf="showForm" class="bg-white shadow-md rounded-lg p-6 mb-6 no-print">
     <h2 class="text-2xl font-semibold mb-4">
       {{ isEditing ? 'Modifier' : 'Nouveau' }} Bon de Sortie
@@ -191,9 +186,7 @@
           >
             <div class="md:col-span-4">
               <label class="block text-sm text-gray-600 mb-1">Produit *</label>
-              <select formControlName="productId"
-                      class="w-full px-3 py-2 border rounded"
-                      (change)="onProductSelected($event, i)">
+              <select formControlName="productId" class="w-full px-3 py-2 border rounded" (change)="onProductSelected($event, i)">
                 <option value="">-- Sélectionnez --</option>
                 <option *ngFor="let p of products$ | async" [value]="p.id">{{ p.name }}</option>
               </select>
@@ -279,7 +272,6 @@
     </form>
   </div>
 
-  <!-- Liste Accordions -->
   <div *ngIf="!isLoading" class="space-y-4">
     <div
       *ngFor="let voucher of filteredVouchers$ | async"
@@ -290,8 +282,7 @@
         class="px-6 py-4 flex justify-between items-center cursor-pointer hover:bg-gray-50"
         (click)="toggleExpand(voucher.id!)"
       >
-        <div class="flex-1 grid grid-cols-4 gap-4">
-          <div><strong>N° :</strong> {{ voucher.voucherNumber }}</div>
+        <div class="flex-1 grid grid-cols-4 gap-4"> <div><strong>N° :</strong> {{ voucher.voucherNumber }}</div>
           <div><strong>Date:</strong> {{ formatDate(voucher.date) }}</div>
           <div><strong>Client:</strong> {{ voucher.customer }}</div>
           <div><strong>Total:</strong> {{ voucher.totalAmount | number: '1.2-2' }} DT</div>
@@ -305,7 +296,6 @@
         <table class="min-w-full">
           <thead class="bg-gray-100">
             <tr>
-              <th class="px-4 py-2 text-left text-sm">ID</th>
               <th class="px-4 py-2 text-left text-sm">Nom Produit</th>
               <th class="px-4 py-2 text-left text-sm">Description</th>
               <th class="px-4 py-2 text-left text-sm">Quantité</th>
@@ -314,16 +304,15 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let line of voucher?.products || []" class="border-t">
-            <td class="px-4 py-2 text-xs font-mono">{{ line.productId }}</td>
-            <td class="px-4 py-2">{{ line.productName }}</td>
-            <td class="px-4 py-2 description">{{ line.description }}</td>
-            <td class="px-4 py-2">{{ line.quantity }}</td>
-            <td class="px-4 py-2">{{ line.unitPrice | number:1.2-2 }} DT</td>
-            <td class="px-4 py-2 font-semibold">{{ line.subtotal | number:1.2-2 }} DT</td>
-        </tr>
+            <tr *ngFor="let line of voucher?.products" class="border-t">
+              <td class="px-4 py-2">{{ line.productName }}</td>
+              <td class="px-4 py-2 text-xs text-gray-600">{{ line.description }}</td>
+              <td class="px-4 py-2">{{ line.quantity }}</td>
+              <td class="px-4 py-2">{{ line.unitPrice | number:'1.2-2' }} DT</td>
+              <td class="px-4 py-2 font-semibold">{{ line.subtotal | number:'1.2-2' }} DT</td>
+            </tr>
             <tr class="bg-red-50 font-bold">
-              <td colspan="5" class="px-4 py-2 text-right">Total :</td>
+              <td colspan="4" class="px-4 py-2 text-right">Total :</td>
               <td class="px-4 py-2 text-red-600">
                 {{ voucher?.totalAmount | number: '1.2-2' }} DT
               </td>
@@ -355,5 +344,4 @@
     <div *ngIf="(filteredVouchers$ | async)?.length === 0" class="text-center py-8 text-gray-500">
       Aucun bon trouvé.
     </div>
-  </div>
-</div>
+  </div> </div>

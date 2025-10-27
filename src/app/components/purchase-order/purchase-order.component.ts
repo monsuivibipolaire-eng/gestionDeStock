@@ -26,7 +26,7 @@ export class PurchaseOrderComponent implements OnInit {
   orders$!: Observable<PurchaseOrder[]>;
   filteredOrders$!: Observable<PurchaseOrder[]>;
   products$!: Observable<Product[]>;
-  suppliers$!: Observable<Supplier[]>; // Added missing declaration
+  suppliers$!: Observable<Supplier[]>;
   productList: Product[] = []; // Synchronous cache
 
   // Form and state
@@ -84,7 +84,7 @@ export class PurchaseOrderComponent implements OnInit {
     this.products$.subscribe((products) => {
       this.productList = products;
     });
-    this.suppliers$ = this.suppliersService.getSuppliers(); // Correctly initialize suppliers$
+    this.suppliers$ = this.suppliersService.getSuppliers();
 
     // Setup the filtered observable pipeline
     this.filteredOrders$ = combineLatest([
@@ -133,7 +133,7 @@ export class PurchaseOrderComponent implements OnInit {
           filtered = filtered.filter(o => (o.totalAmount || 0) <= maxAmount);
         }
         if (status !== 'all') {
-          filtered = filtered.filter(o => (o.status || 'pending') === status); // Use default 'pending' if status is undefined
+          filtered = filtered.filter(o => (o.status || 'pending') === status);
         }
 
         // Apply sorting
@@ -179,7 +179,6 @@ export class PurchaseOrderComponent implements OnInit {
     }
   }
 
-  // Method called on product selection change in the form
   onProductSelected(event: Event, index: number): void {
     const selectElement = event.target as HTMLSelectElement;
     const productId = selectElement.value;
@@ -199,8 +198,8 @@ export class PurchaseOrderComponent implements OnInit {
   }
 
   calculateSubtotal(index: number): number {
-    const line = this.productsFormArray.at(index).value;
-    return (line.quantity || 0) * (line.unitPrice || 0);
+    const line = this.productsFormArray.at(index)?.value;
+    return (line?.quantity || 0) * (line?.unitPrice || 0);
   }
 
   calculateTotal(): number {
@@ -263,24 +262,15 @@ export class PurchaseOrderComponent implements OnInit {
   }
 
   clearFilters(): void {
-    this.searchTerm = '';
-    this.searchTerm$.next('');
-    this.selectedSupplier = null;
-    this.selectedSupplier$.next(null);
-    this.dateFrom = null;
-    this.dateFrom$.next(null);
-    this.dateTo = null;
-    this.dateTo$.next(null);
-    this.minAmount = null;
-    this.minAmount$.next(null);
-    this.maxAmount = null;
-    this.maxAmount$.next(null);
-    this.statusFilter = 'all';
-    this.statusFilter$.next('all');
-    this.sortBy = 'date';
-    this.sortBy$.next('date');
-    this.sortOrder = 'desc';
-    this.sortOrder$.next('desc');
+    this.searchTerm = ''; this.searchTerm$.next('');
+    this.selectedSupplier = null; this.selectedSupplier$.next(null);
+    this.dateFrom = null; this.dateFrom$.next(null);
+    this.dateTo = null; this.dateTo$.next(null);
+    this.minAmount = null; this.minAmount$.next(null);
+    this.maxAmount = null; this.maxAmount$.next(null);
+    this.statusFilter = 'all'; this.statusFilter$.next('all');
+    this.sortBy = 'date'; this.sortBy$.next('date');
+    this.sortOrder = 'desc'; this.sortOrder$.next('desc');
   }
 
   // --- CRUD Methods ---
@@ -319,7 +309,11 @@ export class PurchaseOrderComponent implements OnInit {
     };
 
     if (formValue.expectedDeliveryDate) {
-      orderData.expectedDeliveryDate = Timestamp.fromDate(new Date(formValue.expectedDeliveryDate));
+       try {
+        orderData.expectedDeliveryDate = Timestamp.fromDate(new Date(formValue.expectedDeliveryDate));
+      } catch (e) {
+        console.warn("Invalid date format for expectedDeliveryDate:", formValue.expectedDeliveryDate);
+      }
     }
 
     if (this.isEditing && this.editingId) {
@@ -344,9 +338,9 @@ export class PurchaseOrderComponent implements OnInit {
   editOrder(order: PurchaseOrder): void {
     this.isEditing = true;
     this.editingId = order.id || null;
-    const dateStr = (order.date as Timestamp).toDate().toISOString().split('T')[0];
-    const deliveryStr = order.expectedDeliveryDate ?
-      (order.expectedDeliveryDate as Timestamp).toDate().toISOString().split('T')[0] : '';
+    const dateStr = order.date instanceof Timestamp ? order.date.toDate().toISOString().split('T')[0] : '';
+    const deliveryStr = order.expectedDeliveryDate instanceof Timestamp ?
+      order.expectedDeliveryDate.toDate().toISOString().split('T')[0] : '';
 
     this.productsFormArray.clear();
     order.products.forEach(p => {
@@ -412,7 +406,7 @@ export class PurchaseOrderComponent implements OnInit {
     this.expandedOrderId = this.expandedOrderId === orderId ? null : orderId;
   }
 
-  // --- Helper Methods (Moved outside constructor/properties) ---
+  // --- Helper Methods ---
   getProductName(productId: string): string {
     const product = this.productList.find(p => p.id === productId);
     return product ? product.name : "Produit_Inconnu";
@@ -429,18 +423,19 @@ export class PurchaseOrderComponent implements OnInit {
      return quantity * unitPrice;
    }
 
-  formatDate(timestamp: Timestamp | Date): string {
-    if (!timestamp) return '-'; // Handle potential undefined/null dates
+  formatDate(timestamp: Timestamp | Date | undefined | null): string { // Handle undefined/null
+    if (!timestamp) return '-';
+    let date: Date;
     if (timestamp instanceof Timestamp) {
-      return timestamp.toDate().toLocaleDateString('fr-FR');
+      date = timestamp.toDate();
+    } else {
+      date = new Date(timestamp);
     }
-    // Attempt to handle string dates if necessary, though Timestamp is preferred
-    const date = new Date(timestamp);
     return !isNaN(date.getTime()) ? date.toLocaleDateString('fr-FR') : '-';
   }
 
-  getStatusLabel(status?: string): string { // Made status optional
-    const effectiveStatus = status || 'pending'; // Default to pending
+  getStatusLabel(status?: string): string {
+    const effectiveStatus = status || 'pending';
     const labels: any = {
       pending: 'En Attente',
       confirmed: 'Confirmée',
@@ -450,8 +445,8 @@ export class PurchaseOrderComponent implements OnInit {
     return labels[effectiveStatus] || effectiveStatus;
   }
 
-  getStatusClass(status?: string): string { // Made status optional
-    const effectiveStatus = status || 'pending'; // Default to pending
+  getStatusClass(status?: string): string {
+    const effectiveStatus = status || 'pending';
     const classes: any = {
       pending: 'bg-yellow-100 text-yellow-800',
       confirmed: 'bg-blue-100 text-blue-800',
@@ -464,8 +459,8 @@ export class PurchaseOrderComponent implements OnInit {
 
   // --- Print Methods ---
   printList(): void {
-    this.filteredOrders$.pipe(take(1)).subscribe(orders => {
-      if (!orders || orders.length === 0) { // Added check for undefined
+    this.filteredOrders$.pipe(take(1)).subscribe((orders) => {
+      if (!orders || orders.length === 0) {
         alert('Aucune commande à imprimer.');
         return;
       }
@@ -473,21 +468,217 @@ export class PurchaseOrderComponent implements OnInit {
     });
   }
 
+  // **** CORRECTED generatePrintHTML METHOD ****
   generatePrintHTML(orders: PurchaseOrder[]): void {
-     // ... (Implementation for printing list - needs adaptation from entry/exit) ...
-     console.log('Generating print HTML for list:', orders);
-     alert('Logic for generatePrintHTML needs to be implemented/adapted.');
+    const printWindow = window.open("", "_blank", "width=900,height=700");
+    if (!printWindow) {
+      alert("❌ Popup bloquée !");
+      return;
+    }
+
+    const today = new Date().toLocaleDateString("fr-FR", {
+      year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit"
+    });
+
+    const totalOrders = orders.length;
+    const totalAmount = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+    const totalProducts = orders.reduce((sum, o) => sum + o.products.length, 0);
+    const statusCounts = {
+      pending: orders.filter(o => (o.status || 'pending') === 'pending').length,
+      confirmed: orders.filter(o => o.status === 'confirmed').length,
+      delivered: orders.filter(o => o.status === 'delivered').length,
+      cancelled: orders.filter(o => o.status === 'cancelled').length
+    };
+
+    const filters: string[] = [];
+    if (this.searchTerm) filters.push(`Recherche: "${this.searchTerm}"`);
+    if (this.selectedSupplier) filters.push(`Fournisseur: ${this.selectedSupplier}`);
+    if (this.dateFrom) filters.push(`Date Début: ${new Date(this.dateFrom).toLocaleDateString('fr-FR')}`);
+    if (this.dateTo) filters.push(`Date Fin: ${new Date(this.dateTo).toLocaleDateString('fr-FR')}`);
+    if (this.minAmount !== null) filters.push(`Montant Min: ${this.minAmount} DT`);
+    if (this.maxAmount !== null) filters.push(`Montant Max: ${this.maxAmount} DT`);
+    if (this.statusFilter !== 'all') filters.push(`Statut: ${this.getStatusLabel(this.statusFilter)}`);
+    const sortLabels: any = { date: "Date", supplier: "Fournisseur", amount: "Montant" };
+    filters.push(`Tri: ${sortLabels[this.sortBy]} (${this.sortOrder === "asc" ? "↑" : "↓"})`);
+
+    const rows = orders.map((o, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${o.orderNumber}</td>
+        <td>${this.formatDate(o.date)}</td>
+        <td>${o.supplier}</td>
+        <td>${o.products.length}</td>
+        <td><span class="badge badge-${o.status || 'pending'}">${this.getStatusLabel(o.status)}</span></td>
+        <td>${(o.totalAmount || 0).toFixed(2)} DT</td>
+      </tr>
+    `).join("");
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Liste Bons de Commande - ${today}</title>
+        <style>
+          @page { margin: 15mm; size: A4 landscape; }
+          body { font-family: Arial, sans-serif; margin: 0; padding: 15px; font-size: 10pt; }
+          .header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #f59e0b; padding-bottom: 10px; }
+          .header h1 { font-size: 20pt; color: #f59e0b; margin: 0 0 5px 0; }
+          .filters { background: #fef3c7; padding: 8px; margin-bottom: 12px; border-left: 3px solid #f59e0b; }
+          .filters h3 { font-size: 11pt; margin: 0 0 5px 0; }
+          .filters ul { list-style: none; padding: 0; margin: 0; }
+          .filters li { font-size: 9pt; margin: 2px 0; }
+          .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; }
+          .stat { background: #f9fafb; border: 1px solid #e5e7eb; padding: 8px; text-align: center; }
+          .stat .label { font-size: 8pt; color: #666; }
+          .stat .value { font-size: 14pt; font-weight: bold; color: #f59e0b; }
+          table { width: 100%; border-collapse: collapse; }
+          thead { background: #f59e0b; color: white; }
+          th, td { padding: 6px 8px; text-align: left; border: 1px solid #ddd; font-size: 9pt; }
+          tbody tr:nth-child(even) { background: #f9fafb; }
+          tfoot { background: #fef3c7; font-weight: bold; }
+          /* Badge styles for print */
+          .badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 8pt; font-weight: bold; border: 1px solid #ccc; background: #fff; color: #000;}
+          .badge-pending { border-color: #f59e0b; }
+          .badge-confirmed { border-color: #3b82f6; }
+          .badge-delivered { border-color: #16a34a; }
+          .badge-cancelled { border-color: #dc2626; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>📋 Bons de Commande - Liste</h1>
+          <p>Date d'impression : ${today}</p>
+        </div>
+        <div class="filters">
+          <h3>Filtres Appliqués</h3>
+          <ul>${filters.map(f => `<li>• ${f}</li>`).join("")}</ul>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="label">Total Commandes</div><div class="value">${totalOrders}</div></div>
+          <div class="stat"><div class="label">Total Produits</div><div class="value">${totalProducts}</div></div>
+          <div class="stat"><div class="label">Montant Total</div><div class="value">${totalAmount.toFixed(2)} DT</div></div>
+          <div class="stat"><div class="label">En Attente</div><div class="value">${statusCounts.pending}</div></div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>#</th><th>N° Commande</th><th>Date</th><th>Fournisseur</th><th>Produits</th><th>Statut</th><th>Montant</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+          <tfoot>
+            <tr><td colspan="4">TOTAL (${totalOrders} commandes)</td><td>${totalProducts}</td><td>-</td><td>${totalAmount.toFixed(2)} DT</td></tr>
+          </tfoot>
+        </table>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => printWindow.print(), 500);
   }
 
+  // **** CORRECTED printItem METHOD ****
   printItem(item: any): void {
-     this.filteredOrders$.pipe(take(1)).subscribe(orders => {
-        if (!orders) return;
-        const singleItem = orders.find((o) => o.id === item.id);
-        if (!singleItem) return;
-        // ... (Implementation for printing single item - needs adaptation from entry/exit) ...
-        console.log('Generating print HTML for single item:', singleItem);
-        alert('Logic for printItem needs to be implemented/adapted.');
-     });
+    // Use take(1) to get the current list snapshot
+    this.filteredOrders$.pipe(take(1)).subscribe((orders) => {
+      // Find the specific order from the filtered list
+      const order = orders.find((o) => o.id === item.id);
+      if (!order) {
+        console.error('Bon de commande non trouvé pour impression:', item.id);
+        alert('Erreur : Bon de commande non trouvé.');
+        return;
+      }
+
+      const printWindow = window.open('', '_blank', 'width=800,height=600');
+      if (!printWindow) {
+        alert('❌ Popup bloquée ! Veuillez autoriser les popups pour ce site.');
+        return;
+      }
+
+      // Generate HTML for the single purchase order
+      const productRows = order.products.map(p => `
+        <tr>
+          <td>${p.productName || 'N/A'}</td>
+          <td class="description">${this.getDescription(p.productId)}</td>
+          <td>${p.quantity || 0}</td>
+          <td>${(p.unitPrice || 0).toFixed(2)} DT</td>
+          <td>${(p.subtotal || 0).toFixed(2)} DT</td>
+        </tr>
+      `).join('');
+
+      // ** CORRECTED HTML STRING (No backslashes before ${...}) **
+      const html = `<!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Bon de Commande ${order.orderNumber}</title>
+          <style>
+            /* Basic print styles - adapt colors if needed */
+            body { font-family: Arial, sans-serif; padding: 20px; font-size: 10pt; }
+            h1 { text-align: center; border-bottom: 2px solid #000; margin-bottom: 20px; padding-bottom: 10px; }
+            .details-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            .details-table th, .details-table td { padding: 8px; border: 1px solid #ddd; text-align: left; }
+            .details-table th { background: #f3f4f6; width: 30%; }
+            .products-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+            .products-table th, .products-table td { padding: 8px; border: 1px solid #ddd; text-align: left; }
+            .products-table th { background: #f3f4f6; }
+            .products-table tfoot th, .products-table tfoot td { font-weight: bold; background: #fef3c7; } /* Light amber footer */
+            .description { font-size: 9pt; color: #555; font-style: italic; max-width: 200px; word-wrap: break-word; }
+            .total-amount { color: #d97706; } /* Amber total */
+             /* Status badge styles for print */
+            .badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 8pt; font-weight: bold; border: 1px solid #ccc; background: #fff; color: #000;}
+            .badge-pending { border-color: #f59e0b; }
+            .badge-confirmed { border-color: #3b82f6; }
+            .badge-delivered { border-color: #16a34a; }
+            .badge-cancelled { border-color: #dc2626; }
+          </style>
+        </head>
+        <body>
+          <h1>Bon de Commande N° ${order.orderNumber}</h1>
+          <table class="details-table">
+            <tr><th>Date</th><td>${this.formatDate(order.date)}</td></tr>
+            <tr><th>Fournisseur</th><td>${order.supplier}</td></tr>
+            ${order.expectedDeliveryDate ? `<tr><th>Livraison Prévue</th><td>${this.formatDate(order.expectedDeliveryDate)}</td></tr>` : ''}
+            <tr><th>Statut</th><td><span class="badge badge-${order.status || 'pending'}">${this.getStatusLabel(order.status)}</span></td></tr>
+            ${order.notes ? `<tr><th>Notes</th><td>${order.notes}</td></tr>` : ''}
+          </table>
+
+          <h3>Produits</h3>
+          <table class="products-table">
+            <thead>
+              <tr>
+                <th>Produit</th>
+                <th>Description</th>
+                <th>Quantité</th>
+                <th>Prix Unit.</th>
+                <th>Sous-total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${productRows}
+            </tbody>
+            <tfoot>
+              <tr>
+                <th colspan="4" style="text-align: right;">Total</th>
+                <td class.total-amount">${(order.totalAmount || 0).toFixed(2)} DT</td>
+              </tr>
+            </tfoot>
+          </table>
+        </body>
+        </html>
+      `;
+
+      printWindow.document.write(html);
+      printWindow.document.close();
+
+      setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+        // printWindow.close();
+      }, 250);
+    });
   }
 
 } // End of class PurchaseOrderComponent
