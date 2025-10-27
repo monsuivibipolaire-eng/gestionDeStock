@@ -1,144 +1,126 @@
 #!/bin/bash
 
-# Script pour remplacer la méthode printItem dans ExitVoucherComponent
-# avec la version complète pour l'impression individuelle.
+# ============================================
+# Script de déploiement Angular avec gestion d'erreurs
+# ============================================
+
+echo "========================================"
+echo "Déploiement Angular"
+echo "========================================"
 
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-echo -e "${YELLOW}=== Correction Méthode printItem (Bon de Sortie) ===${NC}\n"
+# ============================================
+# 1. Vérifier que node_modules existe
+# ============================================
 
-TS_FILE="./src/app/components/exit-voucher/exit-voucher.component.ts"
-COMPONENT_NAME="ExitVoucherComponent"
+echo -e "${YELLOW}1. Vérification des dépendances...${NC}"
 
-# --- Vérifier le fichier ---
-if [ ! -f "$TS_FILE" ]; then
-    echo -e "${RED}ERREUR: Fichier $TS_FILE introuvable.${NC}"
+if [ ! -d "node_modules" ]; then
+    echo -e "${YELLOW}Installation des dépendances...${NC}"
+    npm install
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}✗ Échec de l'installation des dépendances${NC}"
+        exit 1
+    fi
+fi
+
+echo -e "${GREEN}✓ Dépendances OK${NC}"
+
+# ============================================
+# 2. Nettoyer les anciens builds
+# ============================================
+
+echo -e "${YELLOW}2. Nettoyage des anciens builds...${NC}"
+
+if [ -d "dist" ]; then
+    rm -rf dist
+fi
+
+if [ -d ".angular" ]; then
+    rm -rf .angular
+fi
+
+echo -e "${GREEN}✓ Nettoyage terminé${NC}"
+
+# ============================================
+# 3. Build de production
+# ============================================
+
+echo -e "${YELLOW}3. Build de production...${NC}"
+
+ng build --configuration production
+
+if [ $? -ne 0 ]; then
+    echo -e "${RED}✗ Échec du build${NC}"
+    echo ""
+    echo "Erreurs possibles :"
+    echo "  - Erreur de syntaxe TypeScript"
+    echo "  - Module manquant"
+    echo "  - Erreur de configuration"
     exit 1
 fi
 
-# --- Créer backup ---
-echo "  → Création backup ($TS_FILE.bak.printitem_exit)..."
-cp "$TS_FILE" "$TS_FILE.bak.printitem_exit"
+echo -e "${GREEN}✓ Build réussi${NC}"
 
-# --- Contenu correct de la méthode printItem pour ExitVoucher ---
-read -r -d '' CORRECT_PRINT_ITEM << 'EOF'
-  printItem(item: any): void {
-    // Use take(1) to get the current list snapshot
-    this.filteredVouchers$.pipe(take(1)).subscribe((vouchers) => {
-      // Find the specific voucher from the filtered list
-      const voucher = vouchers.find((v) => v.id === item.id);
-      if (!voucher) {
-        console.error('Bon de sortie non trouvé pour impression:', item.id);
-        alert('Erreur : Bon de sortie non trouvé.');
-        return;
-      }
+# ============================================
+# 4. Vérifier que dist existe
+# ============================================
 
-      const printWindow = window.open('', '_blank', 'width=800,height=600');
-      if (!printWindow) {
-        alert('❌ Popup bloquée ! Veuillez autoriser les popups pour ce site.');
-        return;
-      }
+echo -e "${YELLOW}4. Vérification des fichiers générés...${NC}"
 
-      // Generate HTML for the single exit voucher
-      const productRows = voucher.products.map(p => `
-        <tr>
-          <td>\${p.productName || 'N/A'}</td>
-          <td class="description">\${this.getDescription(p.productId)}</td> {/* Use the helper method */}
-          <td>\${p.quantity || 0}</td>
-          <td>\${(p.unitPrice || 0).toFixed(2)} DT</td>
-          <td>\${(p.subtotal || 0).toFixed(2)} DT</td>
-        </tr>
-      `).join('');
-
-      const html = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="UTF-8">
-          <title>Bon de Sortie \${voucher.voucherNumber}</title>
-          <style>
-            /* Basic print styles - adapt colors if needed */
-            body { font-family: Arial, sans-serif; padding: 20px; font-size: 10pt; }
-            h1 { text-align: center; border-bottom: 2px solid #000; margin-bottom: 20px; padding-bottom: 10px; }
-            .details-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-            .details-table th, .details-table td { padding: 8px; border: 1px solid #ddd; text-align: left; }
-            .details-table th { background: #f3f4f6; width: 30%; }
-            .products-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-            .products-table th, .products-table td { padding: 8px; border: 1px solid #ddd; text-align: left; }
-            .products-table th { background: #f3f4f6; }
-            .products-table tfoot th, .products-table tfoot td { font-weight: bold; background: #fee2e2; } /* Light red footer */
-            .description { font-size: 9pt; color: #555; font-style: italic; max-width: 200px; word-wrap: break-word; }
-            .total-amount { color: #dc2626; } /* Red total */
-          </style>
-        </head>
-        <body>
-          <h1>Bon de Sortie N° \${voucher.voucherNumber}</h1>
-          <table class="details-table">
-            <tr><th>Date</th><td>\${this.formatDate(voucher.date)}</td></tr>
-            <tr><th>Client</th><td>\${voucher.customer}</td></tr>
-            \${voucher.destination ? `<tr><th>Destination</th><td>\${voucher.destination}</td></tr>` : ''}
-            \${voucher.notes ? `<tr><th>Notes</th><td>\${voucher.notes}</td></tr>` : ''}
-          </table>
-
-          <h3>Produits</h3>
-          <table class="products-table">
-            <thead>
-              <tr>
-                <th>Produit</th>
-                <th>Description</th>
-                <th>Quantité</th>
-                <th>Prix Unit.</th>
-                <th>Sous-total</th>
-              </tr>
-            </thead>
-            <tbody>
-              \${productRows}
-            </tbody>
-            <tfoot>
-              <tr>
-                <th colspan="4" style="text-align: right;">Total</th>
-                <td class="total-amount">\${(voucher.totalAmount || 0).toFixed(2)} DT</td>
-              </tr>
-            </tfoot>
-          </table>
-        </body>
-        </html>
-      `;
-
-      printWindow.document.write(html);
-      printWindow.document.close(); // Important for some browsers
-
-      // Use setTimeout to allow the content to render before printing
-      setTimeout(() => {
-        printWindow.focus(); // Ensure the window has focus
-        printWindow.print();
-        // printWindow.close(); // Optionally close after printing
-      }, 250); // Delay may need adjustment
-    });
-  }
-EOF
-
-# --- Remplacer la méthode dans le fichier TypeScript ---
-echo "  → Remplacement de la méthode printItem dans $COMPONENT_NAME ($TS_FILE)..."
-
-# Utiliser perl pour remplacer toute la méthode printItem existante
-perl -i -0777 -pe "
-s{^\s*(async\s+)?printItem\(item:\s*any\):\s*void\s*\{.*?^\s*\}\n} # Trouve l'ancienne méthode (flexible)
-{\$ENV{CORRECT_PRINT_ITEM}\n}smg # Remplace par la nouvelle méthode
-" --export-var=CORRECT_PRINT_ITEM "$TS_FILE"
-
-# Vérification (simple : cherche une ligne clé de la nouvelle méthode)
-if grep -q "const voucher = vouchers.find((v) => v.id === item.id);" "$TS_FILE" && grep -q "<title>Bon de Sortie" "$TS_FILE"; then
-    echo -e "${GREEN}    ✓ Méthode printItem remplacée avec succès.${NC}"
-else
-    echo -e "${RED}    ✗ Échec du remplacement de la méthode printItem. Vérification manuelle requise.${NC}"
-    echo -e "      Assurez-vous que la méthode printItem(item: any): void {...} est correcte dans le fichier."
+if [ ! -d "dist" ]; then
+    echo -e "${RED}✗ Le dossier dist n'a pas été créé${NC}"
+    exit 1
 fi
 
-echo -e "\n${GREEN}=== Script Terminé ===${NC}"
-echo "La méthode 'printItem' dans '$TS_FILE' a été mise à jour pour les Bons de Sortie."
-echo "Des backups (.bak.printitem_exit) ont été créés."
-echo "Vérifiez les modifications et relancez 'ng serve'."
+# Trouver le dossier de build (peut être dist/nom-projet ou dist/browser)
+BUILD_DIR=$(find dist -name "index.html" -type f -exec dirname {} \; | head -n 1)
+
+if [ -z "$BUILD_DIR" ]; then
+    echo -e "${RED}✗ Impossible de trouver index.html dans dist${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}✓ Fichiers générés dans : $BUILD_DIR${NC}"
+
+# ============================================
+# 5. Déploiement Firebase (si configuré)
+# ============================================
+
+if [ -f "firebase.json" ]; then
+    echo -e "${YELLOW}5. Déploiement Firebase...${NC}"
+    
+    # Vérifier si firebase-tools est installé
+    if ! command -v firebase &> /dev/null; then
+        echo -e "${YELLOW}Installation de firebase-tools...${NC}"
+        npm install -g firebase-tools
+    fi
+    
+    # Déployer
+    firebase deploy
+    
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✓ Déploiement Firebase réussi${NC}"
+    else
+        echo -e "${RED}✗ Échec du déploiement Firebase${NC}"
+        exit 1
+    fi
+else
+    echo -e "${YELLOW}5. firebase.json non trouvé - Déploiement Firebase ignoré${NC}"
+fi
+
+# ============================================
+# FIN
+# ============================================
+
+echo ""
+echo -e "${GREEN}========================================${NC}"
+echo -e "${GREEN}✓ Déploiement terminé avec succès !${NC}"
+echo -e "${GREEN}========================================${NC}"
+echo ""
+echo "Fichiers générés dans : $BUILD_DIR"
+echo ""

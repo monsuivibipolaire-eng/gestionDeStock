@@ -116,33 +116,25 @@
   <!-- Table Produits -->
   <div *ngIf="!isLoading" class="bg-white shadow-md rounded-lg overflow-hidden">
     <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-      <tr>
-        <th (click)="onSortChange('name')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100">
-          Nom
-          <span *ngIf="sortBy === 'name'">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
-        </th>
-        <th (click)="onSortChange('price')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100">
-          Prix Détail (DT)
-          <span *ngIf="sortBy === 'price'">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
-        </th>
-        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-          Prix de Gros (DT)
-        </th>
-        <th (click)="onSortChange('quantity')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100">
-          Quantité
-          <span *ngIf="sortBy === 'quantity'">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
-        </th>
-        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase no-print">Actions</th>
-      </tr>
-    </thead>
-
+      <thead class="bg-gray-50">
+        <tr>
+          <th (click)="onSortChange('name')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100">
+            Nom {{ sortBy === 'name' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}
+          </th>
+          <th (click)="onSortChange('price')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100">
+            Prix {{ sortBy === 'price' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}
+          </th>
+          <th (click)="onSortChange('quantity')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100">
+            Quantité {{ sortBy === 'quantity' ? (sortOrder === 'asc' ? '↑' : '↓') : '' }}
+          </th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase no-print">Actions</th>
+        </tr>
+      </thead>
       <tbody class="bg-white divide-y divide-gray-200" *ngIf="filteredProducts$ | async as products">
         <tr *ngFor="let product of products" class="hover:bg-gray-50">
           <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ product.name }}</td>
           <td class="px-6 py-4 text-sm text-gray-500">{{ product.price | number:'1.2-2' }} DT</td>
-          <td class="px-6 py-4 text-sm text-gray-500">{{ product.prixDeGros || 0 | number: '1.2-2' }} DT</td>
           <td class="px-6 py-4 text-sm">
             <span [ngClass]="{
               'bg-red-100 text-red-800': (product.quantity || 0) === 0,
@@ -160,7 +152,7 @@
           </td>
         </tr>
         <tr *ngIf="products.length === 0">
-          <td colspan="6" class="px-6 py-8 text-center text-gray-500">Aucun produit trouvé.</td>
+          <td colspan="5" class="px-6 py-8 text-center text-gray-500">Aucun produit trouvé.</td>
         </tr>
       </tbody>
     </table>
