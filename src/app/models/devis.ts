@@ -3,6 +3,7 @@ import { Timestamp } from '@angular/fire/firestore';
 export interface ProductLine {
   productId: string;
   productName: string;
+  description?: string;
   quantity: number;
   unitPrice: number;
   subtotal: number;
