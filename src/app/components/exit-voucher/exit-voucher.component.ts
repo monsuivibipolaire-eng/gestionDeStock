@@ -488,5 +488,30 @@ export class ExitVoucherComponent implements OnInit {
       }, 250);
     });
   }
+onProductSelected(event: Event, index: number): void {
+    const selectElement = event.target as HTMLSelectElement;
+    const productId = selectElement.value;
+    const productLine = this.productsFormArray.at(index);
 
+    if (!productId || !productLine) {
+      productLine?.patchValue({ unitPrice: 0 }); // Reset price if no selection
+      return;
+    }
+
+    // Find the product in the synchronous list productList
+    const selectedProduct = this.productList.find(p => p.id === productId);
+
+    if (selectedProduct) {
+      // Update the unit price in the form for this line
+      productLine.patchValue({ unitPrice: selectedProduct.price });
+      // You could optionally add quantity validation here too
+      // const quantityControl = productLine.get('quantity');
+      // quantityControl?.setValidators([... existing validators ..., Validators.max(selectedProduct.quantity)]);
+      // quantityControl?.updateValueAndValidity();
+    } else {
+      // If product not found (shouldn't happen if productList is up-to-date)
+      productLine.patchValue({ unitPrice: 0 });
+      console.warn(`Product not found in productList: ${productId}`);
+    }
+  }
 } // End of class ExitVoucherComponent

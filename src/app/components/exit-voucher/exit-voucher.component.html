@@ -191,7 +191,9 @@
           >
             <div class="md:col-span-4">
               <label class="block text-sm text-gray-600 mb-1">Produit *</label>
-              <select formControlName="productId" class="w-full px-3 py-2 border rounded">
+              <select formControlName="productId"
+                      class="w-full px-3 py-2 border rounded"
+                      (change)="onProductSelected($event, i)">
                 <option value="">-- Sélectionnez --</option>
                 <option *ngFor="let p of products$ | async" [value]="p.id">{{ p.name }}</option>
               </select>
